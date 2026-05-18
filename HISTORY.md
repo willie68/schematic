@@ -1,5 +1,19 @@
 # History
 
+## 0.2.41 - 2026-05-18 (Backend & Frontend)
+
+- **Erweiterte Datei-Upload-Unterstützung für große Dateien**:
+  - **Frontend**: TXT und ZIP zu erlaubten Dateiformaten hinzugefügt
+    - UploadDialog & EditDialog unterstützen jetzt: PDF, JPG, PNG, GIF, TIF, BMP, ZIP, TXT
+    - Validierung aktualisiert mit neuen Formaten in Fehlermeldungen
+  - **Backend**: HTTP-Timeout erhöht für große Uploads
+    - ReadTimeout & WriteTimeout: 15 Sekunden → 300 Sekunden (5 Minuten)
+    - Ermöglicht stabile Uploads auf langsamen Verbindungen
+  - **Backend**: MaxBodySize Middleware implementiert
+    - 50MB Upload-Limit mit klarer Fehlermeldung
+    - Schützt Server vor extrem großen Requests
+  - **Ergebnis**: 5MB+ Dateien können jetzt ohne Verbindungsabbruch hochgeladen werden
+
 ## 0.2.39 - 2026-05-18 (Frontend)
 
 - **ZIP-Datei-Upload**: Unterstützung für ZIP-Archiv-Uploads hinzugefügt

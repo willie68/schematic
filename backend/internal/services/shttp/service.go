@@ -70,8 +70,8 @@ func (s *SHttp) startHTTPSServer(handler http.Handler) {
 
 	s.sslsrv = &http.Server{
 		Addr:         "0.0.0.0:" + strconv.Itoa(s.cfg.SSLPort),
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 300 * time.Second, // 5 minutes for large file uploads
+		ReadTimeout:  300 * time.Second, // 5 minutes for large file uploads
 		IdleTimeout:  60 * time.Second,
 		Handler:      handler,
 		TLSConfig:    tlsConfig,
@@ -116,8 +116,8 @@ func (s *SHttp) resolveTLSConfig() (*tls.Config, error) {
 func (s *SHttp) startHTTPServer(handler http.Handler) {
 	s.srv = &http.Server{
 		Addr:         "0.0.0.0:" + strconv.Itoa(s.cfg.Port),
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 300 * time.Second, // 5 minutes for large file uploads
+		ReadTimeout:  300 * time.Second, // 5 minutes for large file uploads
 		IdleTimeout:  60 * time.Second,
 		Handler:      handler,
 	}

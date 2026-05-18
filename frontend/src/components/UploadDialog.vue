@@ -78,7 +78,7 @@
           @select="onFileSelect"
           :show-upload-button="false"
           :show-cancel-button="false"
-          accept=".pdf,.jpg,.jpeg,.png,.gif,.tif,.tiff,.bmp,.zip"
+          accept=".pdf,.jpg,.jpeg,.png,.gif,.tif,.tiff,.bmp,.zip,.txt"
           multiple
           style="width:100%"
         />
@@ -318,6 +318,7 @@ function getMimeTypeFromFilename(filename) {
     '.tif': 'image/tiff',
     '.tiff': 'image/tiff',
     '.zip': 'application/zip',
+    '.txt': 'text/plain',
   }
 
   return mimeTypes[ext] || 'application/octet-stream'
@@ -362,9 +363,9 @@ async function onFileDrop(event) {
   for (const file of files) {
     // Check if file type is allowed
     const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'))
-    const allowedExts = ['.pdf', '.jpg', '.jpeg', '.png', '.gif', '.tif', '.tiff', '.bmp']
+    const allowedExts = ['.pdf', '.jpg', '.jpeg', '.png', '.gif', '.tif', '.tiff', '.bmp', '.zip', '.txt']
     if (!allowedExts.includes(ext)) {
-      errorMessage.value = `Dateiformat "${ext}" nicht unterstützt. Erlaubt: PDF, JPG, PNG, GIF, TIF, BMP`
+      errorMessage.value = `Dateiformat "${ext}" nicht unterstützt. Erlaubt: PDF, JPG, PNG, GIF, TIF, BMP, ZIP, TXT`
       continue
     }
 

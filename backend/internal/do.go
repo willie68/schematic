@@ -104,6 +104,15 @@ func NewRouter(inj do.Injector) (http.Handler, error) {
 		MaxAge:         int((10 * time.Minute).Seconds()),
 	}))
 
+	// MaxBodySize middleware: limit request body to 50MB for file uploads
+	const maxBodySize = 50 * 1024 * 1024 // 50MB
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			req.Body = http.MaxBytesReader(w, req.Body, maxBodySize)
+			next.ServeHTTP(w, req)
+		})
+	})
+
 	// Debug middleware: log every incoming request path
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
