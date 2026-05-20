@@ -1,8 +1,7 @@
 <template>
   <section class="card">
     <h2>Dokumentsuche</h2>
-    <p class="muted">Durchsuche Schaltpläne, Dokumentationen und PDFs über Tags und Volltext.<br/> Suchoperatoren: <code>+Begriff</code> (erforderlich), <code>-Begriff</code> (ausschließen), <code>Begriff*</code> (Prefix-Matching). Mehrere Begriffe (ohne + oder -) werden als ODER verknüpft. <br/>Tags werden immer UND verknüpft.</p>
-
+    <p class="muted">Durchsuche {{ totalDocuments }} Schaltpläne, Dokumentationen und PDFs über Tags und Volltext.<br/> Suchoperatoren: <code>+Begriff</code> (erforderlich), <code>-Begriff</code> (ausschließen), <code>Begriff*</code> (Prefix-Matching). Mehrere Begriffe (ohne + oder -) werden als ODER verknüpft. <br/>Tags werden immer UND verknüpft.</p>
     <div style="display:grid; gap:0.8rem; margin-bottom:1rem;">
       <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; align-items:center;">
         <InputText 
@@ -300,6 +299,7 @@ const limitOptions = [10, 20, 50, 100]
 const selectedLimit = ref(20)
 const currentSkip = ref(0)
 const totalResults = ref(0)
+const totalDocuments = ref(null)
 const sortField = ref(null)
 const sortOrder = ref(null)
 const privateOnly = ref(false)
@@ -309,6 +309,21 @@ function toTags() {
     .map((tag) => String(tag || '').trim())
     .filter(Boolean)
 }
+
+async function loadAppInfo() {
+  try {
+    const { data } = await api.get('/api/v1/info')
+    if (data && typeof data.documentCount === 'number') {
+      totalDocuments.value = data.documentCount
+    }
+  } catch (err) {
+    console.error('Fehler beim Laden der App-Info:', err)
+  }
+}
+
+onMounted(() => {
+  loadAppInfo()
+})
 
 async function onTagSuggest(event) {
   const queryText = (event.query || '').trim()

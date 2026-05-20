@@ -36,6 +36,7 @@ type documentStore interface {
 	SuggestManufacturers(ctx context.Context, prefix string, limit int) ([]string, error)
 	GetByID(ctx context.Context, id string) (model.Document, error)
 	DeleteByID(ctx context.Context, id string) error
+	CountAll(ctx context.Context) (int64, error)
 }
 
 type effectStore interface {
@@ -95,8 +96,9 @@ type loginResponse struct {
 }
 
 type infoResponse struct {
-	Version string `json:"version"`
-	Status  string `json:"status"`
+	Version       string `json:"version"`
+	Status        string `json:"status"`
+	DocumentCount int64  `json:"documentCount"`
 }
 
 type changePasswordRequest struct {
@@ -167,9 +169,15 @@ func (h *Handler) health(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) info(w http.ResponseWriter, r *http.Request) {
+	count, err := h.docStore.CountAll(r.Context())
+	if err != nil {
+		h.log.Error("count documents", "error", err)
+		count = 0
+	}
 	respondJSON(w, http.StatusOK, infoResponse{
-		Version: version.Version,
-		Status:  "ok",
+		Version:       version.Version,
+		Status:        "ok",
+		DocumentCount: count,
 	})
 }
 

@@ -336,6 +336,19 @@ func (s *MongoStore) DeleteByID(ctx context.Context, id string) error {
 	return nil
 }
 
+func (s *MongoStore) CountAll(ctx context.Context) (int64, error) {
+	if s.col == nil {
+		return 0, errors.New("mongodb not initialised")
+	}
+
+	count, err := s.col.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return 0, fmt.Errorf("count documents: %w", err)
+	}
+
+	return count, nil
+}
+
 func (s *MongoStore) updateTagCounters(ctx context.Context, oldTags []string, newTags []string) error {
 	if s.tagsCol == nil {
 		return errors.New("mongodb tags collection not initialised")
