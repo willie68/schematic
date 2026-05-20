@@ -172,6 +172,7 @@ import Dropdown from 'primevue/dropdown'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import api from '../services/api'
+import { DOC_TYPES } from '../constants/docTypes'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -189,12 +190,7 @@ const currentTagQuery = ref('')
 const suggestedManufacturers = ref([])
 const isDragging = ref(false)
 
-const docTypes = [
-  { label: 'Schaltplan', value: 'schematic' },
-  { label: 'Bedienungsanleitung', value: 'manual' },
-  { label: 'Service-Dokumentation', value: 'service' },
-  { label: 'Zertifikat', value: 'certificate' },
-]
+const docTypes = DOC_TYPES
 
 const form = ref({
   manufacturer: '',
