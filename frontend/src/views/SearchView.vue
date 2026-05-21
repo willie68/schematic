@@ -28,6 +28,7 @@
             @click="togglePrivateAndSearch" />
           <Button icon="pi pi-search" v-tooltip.bottom="'Suchen'" @click="search" :loading="isSearching" />
           <Button v-if="isLoggedIn" icon="pi pi-upload" v-tooltip.bottom="'Upload'" severity="success" @click="showUploadDialog = true" />
+          <Button v-if="selectedDocument" icon="pi pi-link" v-tooltip.bottom="'Link kopieren'" severity="secondary" @click="copyDocumentLink()" />
           <Button v-if="isLoggedIn && selectedDocument" icon="pi pi-pencil" v-tooltip.bottom="'Bearbeiten'" severity="info" @click="showEditDialog = true" />
           <Button v-if="isLoggedIn && selectedDocument" icon="pi pi-trash" v-tooltip.bottom="'Löschen'" severity="danger" @click="confirmDeleteDocument" />
         </div>
@@ -190,7 +191,7 @@
       </div>
 
       <!-- Großer Fileview (in Vollbildmodus) -->
-      <div v-if="expandDetailPanel && selectedDocument && selectedFile" style="flex:1; border:1px solid #e0e0e0; border-radius:4px; background:#f9f9f9; display:flex; flex-direction:column; overflow:hidden; position:relative;">
+      <div v-if="expandDetailPanel && selectedDocument && selectedFile" style="flex:1; display:flex; gap:1rem; border:1px solid #e0e0e0; border-radius:4px; background:#f9f9f9; overflow:hidden; position:relative;">
         <!-- Close-Button (oben rechts) -->
         <Button 
           icon="pi pi-angle-right"
@@ -199,6 +200,100 @@
           v-tooltip.bottom="'Zurück zur Übersicht'"
           @click="expandDetailPanel = false"
           style="position:absolute; top:0.5rem; right:0.5rem; z-index:10; padding:0.5rem;" />
+
+        <!-- Detail Panel (linke Seite) -->
+        <div style="flex:1; overflow:auto; padding:1rem; border-right:1px solid #e0e0e0; display:flex; flex-direction:column; gap:1rem;">
+          <h3 style="margin-top:0;">Details</h3>
+          <div style="display:grid; gap:0.5rem; font-size:0.9em;">
+            <div><strong>Hersteller:</strong> {{ selectedDocument.manufacturer }}</div>
+            <div><strong>Model:</strong> {{ selectedDocument.model }}</div>
+            <div><strong>Untertitel:</strong> {{ selectedDocument.subtitle }}</div>
+            <div><strong>Beschreibung:</strong> {{ selectedDocument.description || '-' }}</div>
+            <div><strong>Eigentümer:</strong> {{ selectedDocument.owner }}</div>
+            <div><strong>Privat:</strong> {{ selectedDocument.privateFile ? 'Ja' : 'Nein' }}</div>
+            <div><strong>Tags:</strong> {{ (selectedDocument.tags || []).join(', ') || '-' }}</div>
+          </div>
+
+          <!-- Datei-Tabelle -->
+          <div style="flex:1; overflow-y:auto; border-top:1px solid #e0e0e0; padding-top:1rem;">
+            <h4 style="margin-top:0;">Dateien</h4>
+            <div style="max-height:calc(100vh - 400px); overflow-y:auto;">
+              <DataTable v-if="selectedDocument.files && selectedDocument.files.length > 0" 
+                :value="selectedDocument.files" 
+                stripedRows
+                size="small"
+                selectionMode="single"
+                v-model:selection="selectedFile"
+                @rowSelect="onFileSelect">
+                <Column field="type" header="Type" style="width:5rem;">
+                  <template #body="{ data }">{{ data.type }}</template>
+                </Column>
+                <Column field="name" header="Name">
+                  <template #body="{ data }">{{ data.name }}</template>
+                </Column>
+                <Column field="page" header="Page" style="width:4rem; text-align:center;">
+                  <template #body="{ data }">{{ data.page || '-' }}</template>
+                </Column>
+              </DataTable>
+              <div v-else style="padding:1rem; text-align:center; color:#999;">
+                Keine Dateien
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Viewer Panel (rechte Seite) -->
+        <div style="flex:2; display:flex; flex-direction:column; overflow:hidden;">
+          <!-- PDF Viewer -->
+          <div v-if="isPdfFile(selectedFile)" style="width:100%; height:100%; display:flex; flex-direction:column;">
+            <div style="flex-shrink:0; padding:0.5rem; background:#f0f0f0; border-bottom:1px solid #e0e0e0; text-align:center; font-size:0.9em;">
+              {{ selectedFile.name }}
+            </div>
+            <embed v-if="selectedFile.data" :src="'data:application/pdf;base64,' + selectedFile.data" type="application/pdf" style="flex:1; width:100%; border:none;" />
+            <div v-else style="flex:1; display:flex; align-items:center; justify-content:center; color:#999;">
+              PDF wird geladen...
+            </div>
+          </div>
+
+          <!-- Image Viewer (mit Zoom, Pan, Rotate, Download) -->
+          <div v-else-if="isImageFile(selectedFile)" style="width:100%; height:100%; display:flex; flex-direction:column;">
+            <div style="flex-shrink:0; padding:0.5rem; background:#f0f0f0; border-bottom:1px solid #e0e0e0; display:flex; justify-content:flex-end; align-items:center; font-size:0.9em;">
+              <div style="display:flex; gap:0.3rem;">
+                <Button icon="pi pi-download" severity="secondary" text @click="downloadImage()" v-tooltip.bottom="'Download'" style="padding:0.25rem;" />
+              </div>
+            </div>
+            <div style="flex:1; display:flex; align-items:center; justify-content:center; overflow:auto; background:#fff;">
+              <Image 
+                v-if="selectedFile.data"
+                ref="imageRefExpanded"
+                :src="'data:' + selectedFile.mimetype + ';base64,' + selectedFile.data"
+                :alt="selectedFile.name"
+                preview
+                imageStyle="object-fit: contain; width: 100%; height: 100%; max-height: 100%;"
+                style="width: 100%; height: 100%;"
+              />
+              <div v-else style="color:#999;">Bild wird geladen...</div>
+            </div>
+          </div>
+
+          <!-- File Info (für andere Typen) -->
+          <div v-else style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem; text-align:center;">
+            <i class="pi pi-file" style="font-size:3rem; color:#ccc; margin-bottom:1rem;"></i>
+            <div style="font-size:0.9em; color:#999;">
+              <div><strong>{{ selectedFile.name }}</strong></div>
+              <div>{{ selectedFile.type }}</div>
+              <div v-if="selectedFile.page">Page {{ selectedFile.page }}</div>
+              <div style="margin-top:1rem; font-size:0.85em;">
+                Vorschau nicht verfügbar
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Großer Fileview - Alte Version (wird durch obiges ersetzt) -->
+      <div v-if="false && expandDetailPanel && selectedDocument && selectedFile" style="flex:1; border:1px solid #e0e0e0; border-radius:4px; background:#f9f9f9; display:flex; flex-direction:column; overflow:hidden; position:relative;">
+        <!-- Close-Button (oben rechts) -->
 
         <!-- PDF Viewer -->
         <div v-if="isPdfFile(selectedFile)" style="width:100%; height:100%; display:flex; flex-direction:column;">
@@ -321,8 +416,50 @@ async function loadAppInfo() {
   }
 }
 
-onMounted(() => {
+function getDocumentLink() {
+  if (!selectedDocument.value) return null
+  const baseUrl = window.location.origin + window.location.pathname
+  return `${baseUrl}?id=${encodeURIComponent(selectedDocument.value.id)}`
+}
+
+function copyDocumentLink() {
+  const link = getDocumentLink()
+  if (link) {
+    navigator.clipboard.writeText(link).then(() => {
+      info('Link kopiert')
+    }).catch(() => {
+      info('Fehler beim Kopieren')
+    })
+  }
+}
+
+onMounted(async () => {
   loadAppInfo()
+  
+  // Check if document ID is in URL parameters
+  const params = new URLSearchParams(window.location.search)
+  const docId = params.get('id')
+  
+  if (docId) {
+    try {
+      // Fetch the document directly by ID
+      const { data } = await api.get(`/api/v1/documents/${docId}`)
+      if (data) {
+        selectedDocument.value = data
+        selectedFile.value = null
+        if (data.files && data.files.length > 0) {
+          selectedFile.value = data.files[0]
+          await loadFileData(selectedFile.value)
+        }
+        expandDetailPanel.value = true
+        hideSearchResults.value = true
+        showDetailPanel.value = false
+      }
+    } catch (err) {
+      console.error('Dokument nicht gefunden:', err)
+      info('Dokument nicht gefunden')
+    }
+  }
 })
 
 async function onTagSuggest(event) {

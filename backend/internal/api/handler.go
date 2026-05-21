@@ -140,6 +140,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		api.Get("/effecttypes", h.listEffectTypes)
 
 		api.Get("/documents/search", h.searchDocuments)
+		api.Get("/documents/{id}", h.getDocument)
 		api.Get("/documents/{id}/files/{filename}", h.downloadFile)
 
 		api.Get("/effects/search", h.searchEffects)
@@ -755,6 +756,49 @@ func (h *Handler) searchDocuments(w http.ResponseWriter, r *http.Request) {
 		"skip":    paged.Pagination.Skip,
 		"limit":   paged.Pagination.Limit,
 	})
+}
+
+func (h *Handler) getDocument(w http.ResponseWriter, r *http.Request) {
+	docID := chi.URLParam(r, "id")
+	if strings.TrimSpace(docID) == "" {
+		respondError(w, http.StatusBadRequest, "document id is required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	// Load the document
+	doc, err := h.docStore.GetByID(ctx, docID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "document not found")
+		return
+	}
+
+	// Extract authentication from Authorization header
+	username := ""
+	isAuthenticated := false
+	authHeader := r.Header.Get("Authorization")
+	if authHeader != "" {
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
+			claims, err := auth.VerifyToken(h.cfg.JWTSecret, parts[1])
+			if err == nil {
+				isAuthenticated = true
+				username = claims.Subject
+			}
+		}
+	}
+
+	// Check if user has access (guest can only see public, authenticated can see public + own private)
+	if doc.PrivateFile {
+		if !isAuthenticated || username != doc.Owner {
+			respondError(w, http.StatusForbidden, "access denied")
+			return
+		}
+	}
+
+	respondJSON(w, http.StatusOK, doc)
 }
 
 func (h *Handler) downloadFile(w http.ResponseWriter, r *http.Request) {

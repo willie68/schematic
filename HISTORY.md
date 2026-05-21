@@ -1,5 +1,31 @@
 # History
 
+## 0.2.44 - 2026-05-21 (Backend & Frontend)
+
+- **Dokumenten-Link-Sharing und Direktzugriff**:
+  - **Backend**: Neuer GET `/api/v1/documents/{id}` Endpoint für Direktzugriff auf einzelne Dokumente
+    - Authentifizierung und Autorisierung integriert (private Dokumente nur für Owner)
+  - **Frontend**: Icon-Button "Link kopieren" in der Dokumentauswahl
+    - Erzeugt einen direkten Link mit Dokument-ID als Query-Parameter
+    - Beim Öffnen des Links wird das Dokument automatisch geladen und im Vollbildmodus angezeigt
+  - **Frontend**: Verbessertes Vollbildmodus-Layout
+    - Zeigt Detail-Panel (Metadaten + Datei-Tabelle) links und Viewer rechts
+    - Ermöglicht Wechsel zwischen Dateien eines Dokuments im Vollbildmodus
+
+- **Zentrale Dokumenttyp-Verwaltung**:
+  - **Frontend**: Neue `constants/docTypes.js` mit zentraler DOC_TYPES-Definition
+    - Verhindert Duplikation in EditDialog und UploadDialog
+    - Einfaches Hinzufügen neuer Dokumenttypen an einer Stelle
+    - Hilfsfunktionen: `getDocTypeByValue()`, `getDocTypeLabel()`
+  - Alle Dialoge nutzen die zentrale Konfiguration
+
+- **Dokumentbestand-Anzeige**:
+  - **Backend**: `infoResponse` um `DocumentCount` Feld erweitert
+  - **Backend**: `CountAll()` Methode in MongoStore implementiert
+  - **Frontend**: Dokumentanzahl vom `/api/v1/info` Endpoint geholt und auf SearchView angezeigt
+    - Info-Box mit Gesamtzahl aller Dokumente in der Datenbank
+    - Wird beim Laden der Seite automatisch aktualisiert
+
 ## 0.2.41 - 2026-05-18 (Backend & Frontend)
 
 - **Erweiterte Datei-Upload-Unterstützung für große Dateien**:

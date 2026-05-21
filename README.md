@@ -4,7 +4,7 @@ Schematics2 ist der Nachfolger von WilliesSchematicsWorld als Monorepo.
 
 Das Repository ist mit GitHub unter https://github.com/willie68/schematic verknüpft.
 
-**Version: Backend 0.2.41, Frontend 0.2.41**
+**Version: Backend 0.2.44, Frontend 0.2.44**
 
 ## Features
 
