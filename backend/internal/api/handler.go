@@ -523,6 +523,30 @@ func (h *Handler) updateDocument(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Handle updated files (existing files with potentially changed types)
+	if allFiles, ok := payload["files"].([]any); ok {
+		for _, af := range allFiles {
+			fileMap, ok := af.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			fileName := toString(fileMap["name"])
+			newType := toString(fileMap["type"])
+
+			// Find and update existing file
+			for i := range doc.Files {
+				if doc.Files[i].Name == fileName {
+					// Update type if provided
+					if newType != "" {
+						doc.Files[i].Type = newType
+					}
+					break
+				}
+			}
+		}
+	}
+
 	// Update timestamps
 	doc.LastModifiedAt = time.Now()
 

@@ -15,6 +15,10 @@
         <RouterLink to="/haftungsausschluss" class="footer-link">
           Haftungsausschluss
         </RouterLink>
+        <span class="separator">|</span>
+        <a href="https://github.com/willie68/schematics2" target="_blank" rel="noopener noreferrer" class="footer-link">
+          <i class="pi pi-github" style="margin-right:0.3rem;"></i>GitHub
+        </a>
       </div>
     </div>
   </footer>

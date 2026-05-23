@@ -41,8 +41,10 @@
 
     <div style="display:flex; gap:1rem; height:calc(100vh - 300px); margin-bottom:1rem;">
       <!-- Treffertabelle (50%, nur wenn nicht versteckt) -->
-      <div v-if="!hideSearchResults && !expandDetailPanel" style="flex:2; overflow-y:auto; border:1px solid #e0e0e0; border-radius:4px;">
+      <div v-if="!hideSearchResults && !expandDetailPanel" style="flex:2; border:1px solid #e0e0e0; border-radius:4px; overflow:hidden;">
         <DataTable :value="results" stripedRows
+          scrollable
+          scrollHeight="flex"
           :sortField="sortField" :sortOrder="sortOrder"
           @sort="onSort"
           removableSort
@@ -126,7 +128,7 @@
               v-model:selection="selectedFile"
               @rowSelect="onFileSelect">
               <Column field="type" header="Type" style="width:5rem;">
-                <template #body="{ data }">{{ data.type }}</template>
+                <template #body="{ data }">{{ getDocTypeLabel(data.type) || data.type }}</template>
               </Column>
               <Column field="name" header="Name">
                 <template #body="{ data }">{{ data.name }}</template>
@@ -226,7 +228,7 @@
                 v-model:selection="selectedFile"
                 @rowSelect="onFileSelect">
                 <Column field="type" header="Type" style="width:5rem;">
-                  <template #body="{ data }">{{ data.type }}</template>
+                    <template #body="{ data }">{{ getDocTypeLabel(data.type) || data.type }}</template>
                 </Column>
                 <Column field="name" header="Name">
                   <template #body="{ data }">{{ data.name }}</template>
@@ -369,6 +371,7 @@ import Image from 'primevue/image'
 import api from '../services/api'
 import { useAuth } from '../composables/useAuth'
 import { useToast } from '../composables/useToast'
+import { getDocTypeLabel } from '../constants/docTypes'
 
 const { isLoggedIn } = useAuth()
 const { info } = useToast()

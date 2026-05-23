@@ -505,6 +505,7 @@ async function submit() {
       subtitle: form.value.subtitle,
       tags: selectedTags.value.map((t) => normalizeTag(t)).filter(Boolean),
       description: form.value.description,
+      files: allFiles,
       newFiles,
       deletedFiles,
     }
