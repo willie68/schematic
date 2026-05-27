@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/samber/do/v2"
+	"github.com/willie68/gowillie68/pkg/measurement"
 	"github.com/willie68/schematics2/backend/internal/api"
 	"github.com/willie68/schematics2/backend/internal/config"
 	"github.com/willie68/schematics2/backend/internal/domain/index"
@@ -64,6 +65,9 @@ func InitHelperServices(inj do.Injector, cfg config.Config) error {
 	logging.Init(cfg.Logging)
 
 	do.ProvideValue(inj, cfg)
+
+	measurement := measurement.New(true)
+	do.ProvideValue(inj, measurement)
 
 	healthService := health.NewService(cfg.Healthcheck)
 	do.ProvideValue(inj, healthService)
@@ -134,6 +138,7 @@ func NewRouter(inj do.Injector) (http.Handler, error) {
 	r.Handle("/client/*", clientHandler)
 
 	h.RegisterRoutes(r)
+	r.Mount("/metrics/measurement", measurement.Routes(inj))
 	return r, nil
 }
 func ShutdownServices(inj do.Injector) {

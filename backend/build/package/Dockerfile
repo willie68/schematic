@@ -3,8 +3,8 @@ FROM node:22-alpine AS frontend-builder
 ARG BASE_PATH=/client
 
 WORKDIR /src/frontend
-COPY frontend/ ./
-COPY frontend/package*.json ./
+COPY schematics2/frontend/ ./
+COPY schematics2/frontend/package*.json ./
 RUN npm ci
 RUN BASE_PATH=${BASE_PATH} npm run build
 
@@ -15,9 +15,13 @@ ARG VCS_REF=""
 ARG BASE_PATH=/client
 
 WORKDIR /src/backend
-COPY backend/go.mod backend/go.sum ./
+RUN apk add --no-cache git
+COPY schematics2/backend/go.mod schematics2/backend/go.sum ./
+COPY gowillie68/ ../gowillie68/
+RUN go mod edit -replace=github.com/willie68/gowillie68=../gowillie68
 RUN go mod download
-COPY backend/ ./
+COPY schematics2/backend/ ./
+RUN go mod edit -replace=github.com/willie68/gowillie68=../gowillie68
 
 COPY --from=frontend-builder /src/frontend/dist /src/backend/internal/webclient/dist
 

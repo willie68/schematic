@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/samber/do/v2"
+	"github.com/willie68/gowillie68/pkg/measurement"
 	"github.com/willie68/schematics2/backend/internal/domain/model"
 	"github.com/willie68/schematics2/backend/internal/logging"
 )
@@ -14,19 +15,28 @@ type docStoreInterface interface {
 	SearchStore(filter model.Query) model.PagedSearchResult
 }
 
+type measurementService interface {
+	Start(name string) measurement.Monitor
+}
+
 type searchIndex struct {
-	docStore docStoreInterface
-	log      *slog.Logger
+	docStore    docStoreInterface
+	measurement measurementService
+	log         *slog.Logger
 }
 
 func New(inj do.Injector) *searchIndex {
 	return &searchIndex{
-		docStore: do.MustInvokeAs[docStoreInterface](inj),
-		log:      logging.New("domain-index"),
+		docStore:    do.MustInvokeAs[docStoreInterface](inj),
+		measurement: do.MustInvokeAs[measurementService](inj),
+		log:         logging.New("domain-index"),
 	}
 }
 
 func (i *searchIndex) Search(query model.Query) model.PagedSearchResult {
+	i.log.Info("Received search query", "query", query.Query, "tags", query.Tags)
+	mon := i.measurement.Start("index-search")
+	defer mon.Stop()
 	// Parse the user query into structured terms
 	query.ParsedQuery = i.parseQuery(query.Query)
 	query.ParsedQuery.TagFilters = query.Tags

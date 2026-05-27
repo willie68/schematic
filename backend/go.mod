@@ -17,16 +17,20 @@ require (
 require (
 	dario.cat/mergo v1.0.2
 	github.com/Graylog2/go-gelf v0.0.0-20170811154226-7ebf4f536d8f
+	github.com/google/uuid v1.6.0
 	github.com/klauspost/compress v1.18.6
+	github.com/rs/xid v1.6.0
 	github.com/stretchr/testify v1.11.1
+	github.com/willie68/gowillie68 v0.0.0-20260527064820-3ef43d9404d9
 	go.mongodb.org/mongo-driver/v2 v2.6.0
+	golang.org/x/image v0.40.0
 )
 
 require (
+	github.com/ajg/form v1.5.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/google/uuid v1.6.0 // indirect
+	github.com/go-chi/render v1.0.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rs/xid v1.6.0 // indirect
 	github.com/samber/go-type-to-string v1.8.0 // indirect
 	github.com/samber/lo v1.53.0 // indirect
 	github.com/samber/slog-common v0.22.0 // indirect
@@ -35,7 +39,6 @@ require (
 	github.com/xdg-go/scram v1.2.0 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	golang.org/x/image v0.40.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect

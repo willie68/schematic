@@ -26,6 +26,7 @@ type Config struct {
 	Profiling   Profiling      `yaml:"profiling"`
 	MongoDB     MongoDB        `yaml:"mongodb"`
 	Repository  Repository     `yaml:"repository"`
+	Measurement bool           `yaml:"measurement"`
 
 	JWTSecret string `yaml:"jwtsecret,omitempty"`
 	AdminUser string `yaml:"adminuser,omitempty"`

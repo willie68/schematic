@@ -39,6 +39,66 @@ func (_m *mockdocumentStore) EXPECT() *mockdocumentStore_Expecter {
 	return &mockdocumentStore_Expecter{mock: &_m.Mock}
 }
 
+// CountAll provides a mock function for the type mockdocumentStore
+func (_mock *mockdocumentStore) CountAll(ctx context.Context) (int64, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CountAll")
+	}
+
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (int64, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) int64); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// mockdocumentStore_CountAll_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CountAll'
+type mockdocumentStore_CountAll_Call struct {
+	*mock.Call
+}
+
+// CountAll is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *mockdocumentStore_Expecter) CountAll(ctx interface{}) *mockdocumentStore_CountAll_Call {
+	return &mockdocumentStore_CountAll_Call{Call: _e.mock.On("CountAll", ctx)}
+}
+
+func (_c *mockdocumentStore_CountAll_Call) Run(run func(ctx context.Context)) *mockdocumentStore_CountAll_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *mockdocumentStore_CountAll_Call) Return(n int64, err error) *mockdocumentStore_CountAll_Call {
+	_c.Call.Return(n, err)
+	return _c
+}
+
+func (_c *mockdocumentStore_CountAll_Call) RunAndReturn(run func(ctx context.Context) (int64, error)) *mockdocumentStore_CountAll_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DeleteByID provides a mock function for the type mockdocumentStore
 func (_mock *mockdocumentStore) DeleteByID(ctx context.Context, id string) error {
 	ret := _mock.Called(ctx, id)
@@ -1160,16 +1220,16 @@ func (_m *mockdocumentIndex) EXPECT() *mockdocumentIndex_Expecter {
 }
 
 // Search provides a mock function for the type mockdocumentIndex
-func (_mock *mockdocumentIndex) Search(query string, tags []string, skip int64, limit int64, sortField string, sortOrder int, privateOnly bool, isAuthenticated bool, username string) model.PagedSearchResult {
-	ret := _mock.Called(query, tags, skip, limit, sortField, sortOrder, privateOnly, isAuthenticated, username)
+func (_mock *mockdocumentIndex) Search(query model.Query) model.PagedSearchResult {
+	ret := _mock.Called(query)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Search")
 	}
 
 	var r0 model.PagedSearchResult
-	if returnFunc, ok := ret.Get(0).(func(string, []string, int64, int64, string, int, bool, bool, string) model.PagedSearchResult); ok {
-		r0 = returnFunc(query, tags, skip, limit, sortField, sortOrder, privateOnly, isAuthenticated, username)
+	if returnFunc, ok := ret.Get(0).(func(model.Query) model.PagedSearchResult); ok {
+		r0 = returnFunc(query)
 	} else {
 		r0 = ret.Get(0).(model.PagedSearchResult)
 	}
@@ -1182,67 +1242,19 @@ type mockdocumentIndex_Search_Call struct {
 }
 
 // Search is a helper method to define mock.On call
-//   - query string
-//   - tags []string
-//   - skip int64
-//   - limit int64
-//   - sortField string
-//   - sortOrder int
-//   - privateOnly bool
-//   - isAuthenticated bool
-//   - username string
-func (_e *mockdocumentIndex_Expecter) Search(query interface{}, tags interface{}, skip interface{}, limit interface{}, sortField interface{}, sortOrder interface{}, privateOnly interface{}, isAuthenticated interface{}, username interface{}) *mockdocumentIndex_Search_Call {
-	return &mockdocumentIndex_Search_Call{Call: _e.mock.On("Search", query, tags, skip, limit, sortField, sortOrder, privateOnly, isAuthenticated, username)}
+//   - query model.Query
+func (_e *mockdocumentIndex_Expecter) Search(query interface{}) *mockdocumentIndex_Search_Call {
+	return &mockdocumentIndex_Search_Call{Call: _e.mock.On("Search", query)}
 }
 
-func (_c *mockdocumentIndex_Search_Call) Run(run func(query string, tags []string, skip int64, limit int64, sortField string, sortOrder int, privateOnly bool, isAuthenticated bool, username string)) *mockdocumentIndex_Search_Call {
+func (_c *mockdocumentIndex_Search_Call) Run(run func(query model.Query)) *mockdocumentIndex_Search_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 string
+		var arg0 model.Query
 		if args[0] != nil {
-			arg0 = args[0].(string)
-		}
-		var arg1 []string
-		if args[1] != nil {
-			arg1 = args[1].([]string)
-		}
-		var arg2 int64
-		if args[2] != nil {
-			arg2 = args[2].(int64)
-		}
-		var arg3 int64
-		if args[3] != nil {
-			arg3 = args[3].(int64)
-		}
-		var arg4 string
-		if args[4] != nil {
-			arg4 = args[4].(string)
-		}
-		var arg5 int
-		if args[5] != nil {
-			arg5 = args[5].(int)
-		}
-		var arg6 bool
-		if args[6] != nil {
-			arg6 = args[6].(bool)
-		}
-		var arg7 bool
-		if args[7] != nil {
-			arg7 = args[7].(bool)
-		}
-		var arg8 string
-		if args[8] != nil {
-			arg8 = args[8].(string)
+			arg0 = args[0].(model.Query)
 		}
 		run(
 			arg0,
-			arg1,
-			arg2,
-			arg3,
-			arg4,
-			arg5,
-			arg6,
-			arg7,
-			arg8,
 		)
 	})
 	return _c
@@ -1253,7 +1265,7 @@ func (_c *mockdocumentIndex_Search_Call) Return(pagedSearchResult model.PagedSea
 	return _c
 }
 
-func (_c *mockdocumentIndex_Search_Call) RunAndReturn(run func(query string, tags []string, skip int64, limit int64, sortField string, sortOrder int, privateOnly bool, isAuthenticated bool, username string) model.PagedSearchResult) *mockdocumentIndex_Search_Call {
+func (_c *mockdocumentIndex_Search_Call) RunAndReturn(run func(query model.Query) model.PagedSearchResult) *mockdocumentIndex_Search_Call {
 	_c.Call.Return(run)
 	return _c
 }
