@@ -2,9 +2,9 @@
 
 Schematics2 ist der Nachfolger von WilliesSchematicsWorld als Monorepo.
 
-Das Repository ist mit GitHub unter https://github.com/willie68/schematic verknüpft.
+Das Repository ist mit GitHub unter https://github.com/willie68/schematics2 verknüpft.
 
-**Version: Backend 0.2.44, Frontend 0.2.44**
+**Version: Backend 0.2.48, Frontend 0.2.48**
 
 ## Features
 
@@ -21,6 +21,7 @@ Das Repository ist mit GitHub unter https://github.com/willie68/schematic verkn�
   - TIFF-Dateien werden im Viewer als PNG angezeigt (kein Download-Overhead)
 - **Authentifizierung**: Eigener Authentifizierungs- und Autorisierungsdienst mit User Registration
 - **Private Documents**: Unterstützung für private und öffentliche Dokumente
+- **Datenschutz & Rechtliches**: Cookie-Hinweis, Datenschutz, Impressum und Haftungsausschluss im Frontend
 - **Effektdatenbank**: Verwaltung und Suche von Effekten mit Sortierung
   - i18n German Übersetzungen für Effekt-Typen
   - Sortierung nach Typ, Hersteller, Modell, Spannung, Strom
@@ -131,24 +132,32 @@ go run cmd/import-all/main.go -base-dir ./testdata -schematics=false -effecttype
 - `GET /api/v1/info` - Backend Version und Status
 - `POST /api/v1/auth/login` - Admin oder Email-Login mit Benutzername/Email und Passwort
 - `POST /api/v1/auth/register` - Registriere neuen Benutzer (öffentlich, Rate-Limited: 10s Mindestdauer)
-- `GET /api/v1/auth/me` - Aktuell authentifizierter Benutzer (JWT erforderlich)
+- `GET /api/v1/users/me` - Aktuell authentifizierter Benutzer (JWT erforderlich)
+- `POST /api/v1/users/change-password` - Passwort ändern (JWT erforderlich, nicht für Admin)
 - `GET /api/v1/tags` - Liste alle Tags auf
 - `GET /api/v1/tags/suggest?q=<prefix>&limit=<n>` - Schlag Tags vor (Prefix-Match, case-insensitiv, normalisiert)
 - `GET /api/v1/manufacturers/suggest?q=<prefix>&limit=<n>` - Schlag Hersteller vor (Prefix-Match, case-insensitiv, case-preserved)
 - `POST /api/v1/documents` (auth required) - Erzeuge ein neues Dokument mit Tags
-- `GET /api/v1/documents/search?q=<query>&tag=<t1>&tag=<t2>` (auth required) - Suche mit Volltext und Tags
+- `PATCH /api/v1/documents/<id>` (auth required) - Aktualisiert Dokument-Metadaten und Dateien (Owner/Admin)
+- `DELETE /api/v1/documents/<id>` (auth required) - Löscht Dokument inkl. Blob-Metadaten (Owner/Admin)
+- `GET /api/v1/documents/search?q=<query>&tag=<t1>&tag=<t2>` - Suche mit Volltext und Tags (optional mit JWT für private Treffer)
+- `GET /api/v1/documents/<id>` - Einzelnes Dokument laden (privat nur für Owner)
+- `GET /api/v1/documents/<id>/files/<filename>` - Datei aus Dokument laden (privat nur für Owner)
 
 ### Effects API
 
-- `GET /api/v1/effects/search?q=<query>&skip=<n>&limit=<n>` - Durchsuche Effects mit Regex-Filter und Pagination
+- `GET /api/v1/effects/search?q=<query>&skip=<n>&limit=<n>&sort=<field>&order=<asc|desc>` - Durchsuche Effects mit Regex-Filter, Sortierung und Pagination
   - `q` - Suchtext (durchsucht effectType, manufacturer, model, tags, comment)
   - `skip` - Überspringe n Ergebnisse (Pagination)
   - `limit` - Begrenzen Sie auf n Ergebnisse (10, 20, 50, ...)
   - Response: `{ results: [...], total: n }`
-- `GET /api/v1/effects/<id>/image` - Hole das erste Bild eines Effects (als Blob)
+- `GET /api/v1/effects/<id>` - Hole einen einzelnen Effect
+- `GET /api/v1/effects/<id>/image` - Hole das Bild eines Effects (als Blob)
 - `GET /api/v1/effecttypes` - Liste alle Effekt-Typen mit i18n Namen
 - `GET /api/v1/connectors/<name>` - Hole Connector-Bild (PNG/JPG aus embedded filesystem)
 - `POST /api/v1/effects` (auth required) - Erstelle neuen Effect mit multipart/form-data
+- `PATCH /api/v1/effects/<id>` (auth required) - Aktualisiere einen Effect
+- `DELETE /api/v1/effects/<id>` (auth required) - Lösche einen Effect
   - Form-Felder: `effectType`, `manufacturer`, `model`, `voltage`, `current`, `connector`, `image`
   - Response: `{ id, ... }`
 
@@ -280,7 +289,6 @@ Frontend läuft standardmäßig auf `http://localhost:5173`.
 
 ## Nächste Schritte
 
-- Persistente Speicherung für Dokumente/Index (z. B. MongoDB + Suchindex)
-- Dateiupload-Pipeline für PDF/OCR/Bild-Metadaten
-- Feingranulare Rollen- und Ressourcenrechte
-- Swagger/OpenAPI für alle Endpunkte
+- OpenAPI/Swagger für die REST-Endpunkte ergänzen
+- E2E-Tests für zentrale User-Flows (Login, Suche, Upload, Dokument-Link) ausbauen
+- Rollen-/Rechtekonzept jenseits von Owner/Admin verfeinern

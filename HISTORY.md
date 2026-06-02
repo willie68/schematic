@@ -1,5 +1,16 @@
 # History
 
+## 0.2.48 - 2026-06-02 (Backend & Frontend)
+
+- **Dokumentation auf aktuellen Codestand synchronisiert**:
+  - `README.md` auf Version **0.2.48** aktualisiert (Backend + Frontend)
+  - API-Abschnitt auf aktuelle Endpunkte gebracht:
+    - User-Endpunkte (`/api/v1/users/me`, `/api/v1/users/change-password`)
+    - Dokument-Endpunkte inkl. Direktzugriff und Datei-Download
+    - Effects-Endpunkte inkl. Sortierparametern und CRUD-Übersicht
+  - Feature-Übersicht erweitert (Kontoverwaltung, Datenschutz/Rechtstexte, Cookie-Hinweis)
+  - Roadmap/Nächste Schritte an den aktuellen Implementierungsstand angepasst
+
 ## 0.2.44 - 2026-05-21 (Backend & Frontend)
 
 - **Dokumenten-Link-Sharing und Direktzugriff**:
