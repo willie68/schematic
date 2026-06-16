@@ -72,3 +72,45 @@ func (s *MongoStore) UpdateUser(ctx context.Context, user model.User) error {
 
 	return nil
 }
+
+// ListAllUsers retrieves all users from the database
+func (s *MongoStore) ListAllUsers(ctx context.Context) ([]model.User, error) {
+	if s.usersCol == nil {
+		return nil, errors.New("mongodb users collection not initialised")
+	}
+
+	opts := &mongo.ListOptions{}
+	// Sort by email ascending
+	opts.SetSort(bson.D{{Key: "email", Value: 1}})
+
+	cursor, err := s.usersCol.Find(ctx, bson.D{}, opts)
+	if err != nil {
+		return nil, fmt.Errorf("list users: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var users []model.User
+	if err = cursor.All(ctx, &users); err != nil {
+		return nil, fmt.Errorf("decode users: %w", err)
+	}
+
+	return users, nil
+}
+
+// GetUserByID retrieves a user by ID
+func (s *MongoStore) GetUserByID(ctx context.Context, userID string) (*model.User, error) {
+	if s.usersCol == nil {
+		return nil, errors.New("mongodb users collection not initialised")
+	}
+
+	var user model.User
+	err := s.usersCol.FindOne(ctx, bson.D{{Key: "_id", Value: userID}}).Decode(&user)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, errors.New("user not found")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get user failed: %w", err)
+	}
+
+	return &user, nil
+}

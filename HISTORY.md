@@ -1,5 +1,21 @@
 # History
 
+## 0.3.0 - 2026-06-16 (Backend & Frontend)
+
+- **Benutzerverwaltungs-Interface für Admins**:
+  - **Backend**: Neue Endpoints `/api/v1/users` (GET) zur Auflistung aller Benutzer und `/api/v1/users/{id}/deactivate` (PATCH) zum Aktivieren/Deaktivieren
+  - **Backend**: Beide Endpoints nur für Admin-Benutzer erreichbar (HTTP 403 für Nicht-Admins)
+  - **Frontend**: Neuer Menüpunkt "Benutzerverwaltung" (ersetzt "neuer Benutzer")
+  - **Dialog**: Tabelle mit allen Benutzern (E-Mail, Vorname, Nachname, Adresse, Status)
+  - **Suchfunktion**: Filterbar nach E-Mail und Namen (oben links)
+  - **Inline-Buttons**: "Deaktivieren" (aktiv nur bei selektierter Zeile) und "Neuer Benutzer" (oben rechts)
+  - **Zeilenauswahl**: Single-Select, Deaktivieren-Button wird nur bei selektierten Zeilen aktiviert
+  - **Status-Anzeige**: Benutzer können als "Aktiv" (grün) oder "Deaktiviert" (rot) angezeigt werden
+
+- **Repository-Erweiterung für Benutzerverwaltung**:
+  - `ListAllUsers(ctx context.Context) ([]User, error)`: Ruft alle Benutzer sortiert nach E-Mail ab
+  - `GetUserByID(ctx context.Context, userID string) (*User, error)`: Ruft Benutzer nach ID ab
+
 ## 0.2.49 - 2026-06-16 (Backend & Frontend)
 
 - **Admin-gesteuerte Benutzeranlage**:

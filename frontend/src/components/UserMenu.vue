@@ -141,6 +141,79 @@
         </div>
       </div>
     </Dialog>
+
+    <Dialog
+      v-model:visible="userManagementVisible"
+      header="Benutzerverwaltung"
+      :modal="true"
+      :closable="true"
+      style="width: 1000px; max-height: 90vh"
+    >
+      <div style="display:flex; flex-direction:column; gap:1rem; height:100%;">
+        <!-- Search bar and buttons -->
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <span class="p-input-icon-left" style="flex:1;">
+            <i class="pi pi-search" />
+            <InputText
+              v-model="searchUsername"
+              placeholder="Nach Benutzer suchen..."
+              style="width:100%;"
+              @input="filterUsers"
+            />
+          </span>
+          <Button
+            label="Deaktivieren"
+            icon="pi pi-ban"
+            severity="danger"
+            :disabled="!selectedUser"
+            @click="toggleDeactivateUser"
+            :loading="deactivateLoading"
+          />
+          <Button
+            label="Neuer Benutzer"
+            icon="pi pi-user-plus"
+            @click="openNewUserDialog"
+          />
+        </div>
+
+        <!-- Users table -->
+        <div style="flex:1; overflow-y:auto;">
+          <DataTable
+            :value="filteredUsers"
+            selectionMode="single"
+            v-model:selection="selectedUser"
+            dataKey="id"
+            :rows="10"
+            stripedRows
+            :paginator="filteredUsers.length > 10"
+            @rowSelect="onRowSelect"
+          >
+            <Column field="email" header="E-Mail" style="width:25%;"></Column>
+            <Column field="firstName" header="Vorname" style="width:15%;"></Column>
+            <Column field="lastName" header="Nachname" style="width:15%;"></Column>
+            <Column field="address.street" header="Adresse" style="width:25%;">
+              <template #body="slotProps">
+                <span v-if="slotProps.data.address">
+                  {{ slotProps.data.address.street }},
+                  {{ slotProps.data.address.zipCode }} {{ slotProps.data.address.city }}
+                </span>
+                <span v-else style="color:#999;">-</span>
+              </template>
+            </Column>
+            <Column field="deactive" header="Status" style="width:12%;">
+              <template #body="slotProps">
+                <span v-if="slotProps.data.deactive" style="color:#e74c3c; font-weight:bold;">
+                  Deaktiviert
+                </span>
+                <span v-else style="color:#27ae60; font-weight:bold;">
+                  Aktiv
+                </span>
+              </template>
+            </Column>
+          </DataTable>
+        </div>
+      </div>
+    </Dialog>
   </div>
 </template> 
 <script setup>
@@ -152,6 +225,8 @@ import Dialog from 'primevue/dialog'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
 import { useAuth } from '../composables/useAuth'
 import { useToast } from '../composables/useToast'
 import { APP_VERSION } from '../config'
@@ -166,6 +241,7 @@ const infoVisible = ref(false)
 const accountVisible = ref(false)
 const changePasswordVisible = ref(false)
 const newUserVisible = ref(false)
+const userManagementVisible = ref(false)
 const info = ref({
   version: 'Loading...',
   status: 'Loading...',
@@ -190,6 +266,13 @@ const newUserForm = ref({
 })
 const newUserError = ref('')
 const newUserSaving = ref(false)
+
+// User Management
+const allUsers = ref([])
+const filteredUsers = ref([])
+const selectedUser = ref(null)
+const searchUsername = ref('')
+const deactivateLoading = ref(false)
 
 const isAdmin = computed(() => {
   const token = localStorage.getItem('schematics2_token')
@@ -234,11 +317,11 @@ const items = computed(() => {
 
   if (isAdmin.value) {
     menuItems.push({
-      label: 'neuer Benutzer',
-      icon: 'pi pi-user-plus',
+      label: 'Benutzerverwaltung',
+      icon: 'pi pi-users',
       command: () => {
-        resetNewUserForm()
-        newUserVisible.value = true
+        fetchAllUsers()
+        userManagementVisible.value = true
       },
     })
   }
@@ -287,6 +370,59 @@ async function fetchCurrentUser() {
     currentUser.value = data
   } catch (err) {
     currentUser.value = null
+  }
+}
+
+async function fetchAllUsers() {
+  try {
+    const { data } = await api.get('/api/v1/users')
+    allUsers.value = data.users || []
+    filteredUsers.value = allUsers.value
+    selectedUser.value = null
+    searchUsername.value = ''
+  } catch (err) {
+    showError('Fehler beim Laden der Benutzerliste')
+    allUsers.value = []
+    filteredUsers.value = []
+  }
+}
+
+function filterUsers() {
+  if (!searchUsername.value.trim()) {
+    filteredUsers.value = allUsers.value
+  } else {
+    const query = searchUsername.value.toLowerCase()
+    filteredUsers.value = allUsers.value.filter(user =>
+      user.email.toLowerCase().includes(query) ||
+      user.firstName.toLowerCase().includes(query) ||
+      user.lastName.toLowerCase().includes(query)
+    )
+  }
+  selectedUser.value = null
+}
+
+function onRowSelect(event) {
+  selectedUser.value = event.data
+}
+
+function openNewUserDialog() {
+  resetNewUserForm()
+  userManagementVisible.value = false
+  newUserVisible.value = true
+}
+
+async function toggleDeactivateUser() {
+  if (!selectedUser.value) return
+
+  deactivateLoading.value = true
+  try {
+    await api.patch(`/api/v1/users/${selectedUser.value.id}/deactivate`)
+    success(selectedUser.value.deactive ? 'Benutzer aktiviert' : 'Benutzer deaktiviert')
+    await fetchAllUsers()
+  } catch (err) {
+    showError('Fehler beim Ändern des Benutzerstatus')
+  } finally {
+    deactivateLoading.value = false
   }
 }
 
@@ -408,6 +544,11 @@ async function submitNewUser() {
 
     success('Benutzer wurde angelegt')
     newUserVisible.value = false
+    // Wenn Benutzerverwaltung offen ist, neu laden
+    if (userManagementVisible.value) {
+      await fetchAllUsers()
+      userManagementVisible.value = true
+    }
   } catch (err) {
     newUserError.value = err.response?.data?.error || 'Fehler beim Anlegen des Benutzers'
     showError(newUserError.value)

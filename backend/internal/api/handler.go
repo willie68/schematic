@@ -56,6 +56,8 @@ type userStore interface {
 	CreateUser(ctx context.Context, user model.User) error
 	GetUserByEmail(ctx context.Context, email string) (*model.User, bool)
 	UpdateUser(ctx context.Context, user model.User) error
+	ListAllUsers(ctx context.Context) ([]model.User, error)
+	GetUserByID(ctx context.Context, userID string) (*model.User, error)
 }
 
 type documentIndex interface {
@@ -154,6 +156,8 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 			protected.Use(h.authMiddleware)
 			protected.Get("/users/me", h.me)
 			protected.Post("/users/change-password", h.changePassword)
+			protected.Get("/users", h.listUsers)
+			protected.Patch("/users/{id}/deactivate", h.deactivateUser)
 
 			protected.Post("/auth/register", h.register)
 
@@ -255,6 +259,80 @@ func (h *Handler) register(w http.ResponseWriter, r *http.Request) {
 		"firstName": user.FirstName,
 		"lastName":  user.LastName,
 		"created":   user.Created,
+	})
+}
+
+func (h *Handler) listUsers(w http.ResponseWriter, r *http.Request) {
+	// Only admins can list users
+	roles, ok := r.Context().Value(ctxRolesKey{}).([]string)
+	if !ok || !slices.Contains(roles, "admin") {
+		respondError(w, http.StatusForbidden, "only admins can list users")
+		return
+	}
+
+	users, err := h.userStore.ListAllUsers(r.Context())
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to list users")
+		return
+	}
+
+	// Map users to response (exclude passwords)
+	userResponses := make([]map[string]any, 0, len(users))
+	for _, user := range users {
+		userResponses = append(userResponses, map[string]any{
+			"id":        user.ID,
+			"email":     user.Email,
+			"firstName": user.FirstName,
+			"lastName":  user.LastName,
+			"address":   user.Address,
+			"created":   user.Created,
+			"updated":   user.Updated,
+			"deactive":  user.Deactive,
+		})
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"users": userResponses,
+		"count": len(userResponses),
+	})
+}
+
+func (h *Handler) deactivateUser(w http.ResponseWriter, r *http.Request) {
+	// Only admins can deactivate users
+	roles, ok := r.Context().Value(ctxRolesKey{}).([]string)
+	if !ok || !slices.Contains(roles, "admin") {
+		respondError(w, http.StatusForbidden, "only admins can deactivate users")
+		return
+	}
+
+	userID := chi.URLParam(r, "id")
+	if strings.TrimSpace(userID) == "" {
+		respondError(w, http.StatusBadRequest, "user id is required")
+		return
+	}
+
+	// Get user
+	user, err := h.userStore.GetUserByID(r.Context(), userID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "user not found")
+		return
+	}
+
+	// Toggle deactive status
+	user.Deactive = !user.Deactive
+	user.Updated = time.Now().UTC().Unix()
+
+	// Update user
+	if err := h.userStore.UpdateUser(r.Context(), *user); err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to update user")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"id":       user.ID,
+		"email":    user.Email,
+		"deactive": user.Deactive,
+		"updated":  user.Updated,
 	})
 }
 
