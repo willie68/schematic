@@ -9,6 +9,7 @@ import (
 	"github.com/willie68/schematics2/backend/internal/domain/model"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 // CreateUser adds a new user to the database
@@ -79,9 +80,7 @@ func (s *MongoStore) ListAllUsers(ctx context.Context) ([]model.User, error) {
 		return nil, errors.New("mongodb users collection not initialised")
 	}
 
-	opts := &mongo.ListOptions{}
-	// Sort by email ascending
-	opts.SetSort(bson.D{{Key: "email", Value: 1}})
+	opts := options.Find().SetSort(bson.D{{Key: "email", Value: 1}})
 
 	cursor, err := s.usersCol.Find(ctx, bson.D{}, opts)
 	if err != nil {

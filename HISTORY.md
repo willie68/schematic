@@ -1,5 +1,16 @@
 # History
 
+## 0.3.1 - 2026-06-16 (Backend & Frontend)
+
+- **Verbessertes Benutzerverwaltungs-Interface**:
+  - **Frontend**: Button-Label und Icon ändern sich dynamisch basierend auf User-Status
+    - "Deaktivieren" (rot, Icon: pi-ban) für aktive Benutzer
+    - "Aktivieren" (grün, Icon: pi-check) für deaktivierte Benutzer
+    - Severity wechselt: danger (rot) ↔ success (grün)
+  - **Backend**: `userStore` Interface aktualisiert um `ListAllUsers()` und `GetUserByID()` Methoden
+  - **Testing**: Mocks mit mockery v3.7.1 regeneriert
+  - **Konfiguration**: `.mockery.yml` für mockery v3 konfiguriert
+
 ## 0.3.0 - 2026-06-16 (Backend & Frontend)
 
 - **Benutzerverwaltungs-Interface für Admins**:

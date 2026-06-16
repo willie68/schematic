@@ -172,7 +172,7 @@ type MockRegisterer_Register_Call struct {
 
 // Register is a helper method to define mock.On call
 //   - check Check
-func (_e *MockRegisterer_Expecter) Register(check interface{}) *MockRegisterer_Register_Call {
+func (_e *MockRegisterer_Expecter) Register(check any) *MockRegisterer_Register_Call {
 	return &MockRegisterer_Register_Call{Call: _e.mock.On("Register", check)}
 }
 
@@ -250,7 +250,7 @@ type MockUnregisterer_Unregister_Call struct {
 
 // Unregister is a helper method to define mock.On call
 //   - checkname string
-func (_e *MockUnregisterer_Expecter) Unregister(checkname interface{}) *MockUnregisterer_Unregister_Call {
+func (_e *MockUnregisterer_Expecter) Unregister(checkname any) *MockUnregisterer_Unregister_Call {
 	return &MockUnregisterer_Unregister_Call{Call: _e.mock.On("Unregister", checkname)}
 }
 

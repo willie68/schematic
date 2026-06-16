@@ -63,7 +63,7 @@ type mockuserStore_CreateUser_Call struct {
 // CreateUser is a helper method to define mock.On call
 //   - ctx context.Context
 //   - user model.User
-func (_e *mockuserStore_Expecter) CreateUser(ctx interface{}, user interface{}) *mockuserStore_CreateUser_Call {
+func (_e *mockuserStore_Expecter) CreateUser(ctx any, user any) *mockuserStore_CreateUser_Call {
 	return &mockuserStore_CreateUser_Call{Call: _e.mock.On("CreateUser", ctx, user)}
 }
 
@@ -96,22 +96,24 @@ func (_c *mockuserStore_CreateUser_Call) RunAndReturn(run func(ctx context.Conte
 }
 
 // GetUserByEmail provides a mock function for the type mockuserStore
-func (_mock *mockuserStore) GetUserByEmail(ctx context.Context, email string) (model.User, bool) {
+func (_mock *mockuserStore) GetUserByEmail(ctx context.Context, email string) (*model.User, bool) {
 	ret := _mock.Called(ctx, email)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetUserByEmail")
 	}
 
-	var r0 model.User
+	var r0 *model.User
 	var r1 bool
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (model.User, bool)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*model.User, bool)); ok {
 		return returnFunc(ctx, email)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) model.User); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *model.User); ok {
 		r0 = returnFunc(ctx, email)
 	} else {
-		r0 = ret.Get(0).(model.User)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) bool); ok {
 		r1 = returnFunc(ctx, email)
@@ -129,7 +131,7 @@ type mockuserStore_GetUserByEmail_Call struct {
 // GetUserByEmail is a helper method to define mock.On call
 //   - ctx context.Context
 //   - email string
-func (_e *mockuserStore_Expecter) GetUserByEmail(ctx interface{}, email interface{}) *mockuserStore_GetUserByEmail_Call {
+func (_e *mockuserStore_Expecter) GetUserByEmail(ctx any, email any) *mockuserStore_GetUserByEmail_Call {
 	return &mockuserStore_GetUserByEmail_Call{Call: _e.mock.On("GetUserByEmail", ctx, email)}
 }
 
@@ -151,12 +153,199 @@ func (_c *mockuserStore_GetUserByEmail_Call) Run(run func(ctx context.Context, e
 	return _c
 }
 
-func (_c *mockuserStore_GetUserByEmail_Call) Return(user model.User, b bool) *mockuserStore_GetUserByEmail_Call {
+func (_c *mockuserStore_GetUserByEmail_Call) Return(user *model.User, b bool) *mockuserStore_GetUserByEmail_Call {
 	_c.Call.Return(user, b)
 	return _c
 }
 
-func (_c *mockuserStore_GetUserByEmail_Call) RunAndReturn(run func(ctx context.Context, email string) (model.User, bool)) *mockuserStore_GetUserByEmail_Call {
+func (_c *mockuserStore_GetUserByEmail_Call) RunAndReturn(run func(ctx context.Context, email string) (*model.User, bool)) *mockuserStore_GetUserByEmail_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetUserByID provides a mock function for the type mockuserStore
+func (_mock *mockuserStore) GetUserByID(ctx context.Context, userID string) (*model.User, error) {
+	ret := _mock.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUserByID")
+	}
+
+	var r0 *model.User
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*model.User, error)); ok {
+		return returnFunc(ctx, userID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *model.User); ok {
+		r0 = returnFunc(ctx, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// mockuserStore_GetUserByID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUserByID'
+type mockuserStore_GetUserByID_Call struct {
+	*mock.Call
+}
+
+// GetUserByID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID string
+func (_e *mockuserStore_Expecter) GetUserByID(ctx any, userID any) *mockuserStore_GetUserByID_Call {
+	return &mockuserStore_GetUserByID_Call{Call: _e.mock.On("GetUserByID", ctx, userID)}
+}
+
+func (_c *mockuserStore_GetUserByID_Call) Run(run func(ctx context.Context, userID string)) *mockuserStore_GetUserByID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *mockuserStore_GetUserByID_Call) Return(user *model.User, err error) *mockuserStore_GetUserByID_Call {
+	_c.Call.Return(user, err)
+	return _c
+}
+
+func (_c *mockuserStore_GetUserByID_Call) RunAndReturn(run func(ctx context.Context, userID string) (*model.User, error)) *mockuserStore_GetUserByID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListAllUsers provides a mock function for the type mockuserStore
+func (_mock *mockuserStore) ListAllUsers(ctx context.Context) ([]model.User, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListAllUsers")
+	}
+
+	var r0 []model.User
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]model.User, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) []model.User); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.User)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// mockuserStore_ListAllUsers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListAllUsers'
+type mockuserStore_ListAllUsers_Call struct {
+	*mock.Call
+}
+
+// ListAllUsers is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *mockuserStore_Expecter) ListAllUsers(ctx any) *mockuserStore_ListAllUsers_Call {
+	return &mockuserStore_ListAllUsers_Call{Call: _e.mock.On("ListAllUsers", ctx)}
+}
+
+func (_c *mockuserStore_ListAllUsers_Call) Run(run func(ctx context.Context)) *mockuserStore_ListAllUsers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *mockuserStore_ListAllUsers_Call) Return(users []model.User, err error) *mockuserStore_ListAllUsers_Call {
+	_c.Call.Return(users, err)
+	return _c
+}
+
+func (_c *mockuserStore_ListAllUsers_Call) RunAndReturn(run func(ctx context.Context) ([]model.User, error)) *mockuserStore_ListAllUsers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateUser provides a mock function for the type mockuserStore
+func (_mock *mockuserStore) UpdateUser(ctx context.Context, user model.User) error {
+	ret := _mock.Called(ctx, user)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateUser")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, model.User) error); ok {
+		r0 = returnFunc(ctx, user)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// mockuserStore_UpdateUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateUser'
+type mockuserStore_UpdateUser_Call struct {
+	*mock.Call
+}
+
+// UpdateUser is a helper method to define mock.On call
+//   - ctx context.Context
+//   - user model.User
+func (_e *mockuserStore_Expecter) UpdateUser(ctx any, user any) *mockuserStore_UpdateUser_Call {
+	return &mockuserStore_UpdateUser_Call{Call: _e.mock.On("UpdateUser", ctx, user)}
+}
+
+func (_c *mockuserStore_UpdateUser_Call) Run(run func(ctx context.Context, user model.User)) *mockuserStore_UpdateUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 model.User
+		if args[1] != nil {
+			arg1 = args[1].(model.User)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *mockuserStore_UpdateUser_Call) Return(err error) *mockuserStore_UpdateUser_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *mockuserStore_UpdateUser_Call) RunAndReturn(run func(ctx context.Context, user model.User) error) *mockuserStore_UpdateUser_Call {
 	_c.Call.Return(run)
 	return _c
 }

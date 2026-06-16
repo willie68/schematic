@@ -162,9 +162,9 @@
             />
           </span>
           <Button
-            label="Deaktivieren"
-            icon="pi pi-ban"
-            severity="danger"
+            :label="selectedUser?.deactive ? 'Aktivieren' : 'Deaktivieren'"
+            :icon="selectedUser?.deactive ? 'pi pi-check' : 'pi pi-ban'"
+            :severity="selectedUser?.deactive ? 'success' : 'danger'"
             :disabled="!selectedUser"
             @click="toggleDeactivateUser"
             :loading="deactivateLoading"
@@ -585,3 +585,5 @@ watch(infoVisible, (newVal) => {
   align-items: center;
 }
 </style>
+
+

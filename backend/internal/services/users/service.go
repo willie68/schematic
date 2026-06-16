@@ -18,6 +18,8 @@ type userStore interface {
 	GetUserByEmail(ctx context.Context, email string) (*model.User, bool)
 	CreateUser(ctx context.Context, user model.User) error
 	UpdateUser(ctx context.Context, user model.User) error
+	ListAllUsers(ctx context.Context) ([]model.User, error)
+	GetUserByID(ctx context.Context, userID string) (*model.User, error)
 }
 
 // Service manages user operations with flood protection

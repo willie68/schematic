@@ -61,7 +61,7 @@ type mockdocStoreInterface_SearchStore_Call struct {
 
 // SearchStore is a helper method to define mock.On call
 //   - filter model.Query
-func (_e *mockdocStoreInterface_Expecter) SearchStore(filter interface{}) *mockdocStoreInterface_SearchStore_Call {
+func (_e *mockdocStoreInterface_Expecter) SearchStore(filter any) *mockdocStoreInterface_SearchStore_Call {
 	return &mockdocStoreInterface_SearchStore_Call{Call: _e.mock.On("SearchStore", filter)}
 }
 
@@ -141,7 +141,7 @@ type mockmeasurementService_Start_Call struct {
 
 // Start is a helper method to define mock.On call
 //   - name string
-func (_e *mockmeasurementService_Expecter) Start(name interface{}) *mockmeasurementService_Start_Call {
+func (_e *mockmeasurementService_Expecter) Start(name any) *mockmeasurementService_Start_Call {
 	return &mockmeasurementService_Start_Call{Call: _e.mock.On("Start", name)}
 }
 

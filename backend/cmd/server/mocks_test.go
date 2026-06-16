@@ -84,7 +84,7 @@ type mockshttpsrv_StartServers_Call struct {
 // StartServers is a helper method to define mock.On call
 //   - router http.Handler
 //   - healthRouter http.Handler
-func (_e *mockshttpsrv_Expecter) StartServers(router interface{}, healthRouter interface{}) *mockshttpsrv_StartServers_Call {
+func (_e *mockshttpsrv_Expecter) StartServers(router any, healthRouter any) *mockshttpsrv_StartServers_Call {
 	return &mockshttpsrv_StartServers_Call{Call: _e.mock.On("StartServers", router, healthRouter)}
 }
 

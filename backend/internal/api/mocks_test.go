@@ -72,7 +72,7 @@ type mockdocumentStore_CountAll_Call struct {
 
 // CountAll is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *mockdocumentStore_Expecter) CountAll(ctx interface{}) *mockdocumentStore_CountAll_Call {
+func (_e *mockdocumentStore_Expecter) CountAll(ctx any) *mockdocumentStore_CountAll_Call {
 	return &mockdocumentStore_CountAll_Call{Call: _e.mock.On("CountAll", ctx)}
 }
 
@@ -124,7 +124,7 @@ type mockdocumentStore_DeleteByID_Call struct {
 // DeleteByID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id string
-func (_e *mockdocumentStore_Expecter) DeleteByID(ctx interface{}, id interface{}) *mockdocumentStore_DeleteByID_Call {
+func (_e *mockdocumentStore_Expecter) DeleteByID(ctx any, id any) *mockdocumentStore_DeleteByID_Call {
 	return &mockdocumentStore_DeleteByID_Call{Call: _e.mock.On("DeleteByID", ctx, id)}
 }
 
@@ -190,7 +190,7 @@ type mockdocumentStore_GetByID_Call struct {
 // GetByID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id string
-func (_e *mockdocumentStore_Expecter) GetByID(ctx interface{}, id interface{}) *mockdocumentStore_GetByID_Call {
+func (_e *mockdocumentStore_Expecter) GetByID(ctx any, id any) *mockdocumentStore_GetByID_Call {
 	return &mockdocumentStore_GetByID_Call{Call: _e.mock.On("GetByID", ctx, id)}
 }
 
@@ -257,7 +257,7 @@ type mockdocumentStore_ListTags_Call struct {
 
 // ListTags is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *mockdocumentStore_Expecter) ListTags(ctx interface{}) *mockdocumentStore_ListTags_Call {
+func (_e *mockdocumentStore_Expecter) ListTags(ctx any) *mockdocumentStore_ListTags_Call {
 	return &mockdocumentStore_ListTags_Call{Call: _e.mock.On("ListTags", ctx)}
 }
 
@@ -321,7 +321,7 @@ type mockdocumentStore_SuggestManufacturers_Call struct {
 //   - ctx context.Context
 //   - prefix string
 //   - limit int
-func (_e *mockdocumentStore_Expecter) SuggestManufacturers(ctx interface{}, prefix interface{}, limit interface{}) *mockdocumentStore_SuggestManufacturers_Call {
+func (_e *mockdocumentStore_Expecter) SuggestManufacturers(ctx any, prefix any, limit any) *mockdocumentStore_SuggestManufacturers_Call {
 	return &mockdocumentStore_SuggestManufacturers_Call{Call: _e.mock.On("SuggestManufacturers", ctx, prefix, limit)}
 }
 
@@ -395,7 +395,7 @@ type mockdocumentStore_SuggestTags_Call struct {
 //   - ctx context.Context
 //   - prefix string
 //   - limit int
-func (_e *mockdocumentStore_Expecter) SuggestTags(ctx interface{}, prefix interface{}, limit interface{}) *mockdocumentStore_SuggestTags_Call {
+func (_e *mockdocumentStore_Expecter) SuggestTags(ctx any, prefix any, limit any) *mockdocumentStore_SuggestTags_Call {
 	return &mockdocumentStore_SuggestTags_Call{Call: _e.mock.On("SuggestTags", ctx, prefix, limit)}
 }
 
@@ -456,7 +456,7 @@ type mockdocumentStore_Upsert_Call struct {
 
 // Upsert is a helper method to define mock.On call
 //   - doc model.Document
-func (_e *mockdocumentStore_Expecter) Upsert(doc interface{}) *mockdocumentStore_Upsert_Call {
+func (_e *mockdocumentStore_Expecter) Upsert(doc any) *mockdocumentStore_Upsert_Call {
 	return &mockdocumentStore_Upsert_Call{Call: _e.mock.On("Upsert", doc)}
 }
 
@@ -535,7 +535,7 @@ type mockeffectStore_CreateEffect_Call struct {
 // CreateEffect is a helper method to define mock.On call
 //   - ctx context.Context
 //   - effect *model.Effect
-func (_e *mockeffectStore_Expecter) CreateEffect(ctx interface{}, effect interface{}) *mockeffectStore_CreateEffect_Call {
+func (_e *mockeffectStore_Expecter) CreateEffect(ctx any, effect any) *mockeffectStore_CreateEffect_Call {
 	return &mockeffectStore_CreateEffect_Call{Call: _e.mock.On("CreateEffect", ctx, effect)}
 }
 
@@ -592,7 +592,7 @@ type mockeffectStore_DeleteEffect_Call struct {
 // DeleteEffect is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id string
-func (_e *mockeffectStore_Expecter) DeleteEffect(ctx interface{}, id interface{}) *mockeffectStore_DeleteEffect_Call {
+func (_e *mockeffectStore_Expecter) DeleteEffect(ctx any, id any) *mockeffectStore_DeleteEffect_Call {
 	return &mockeffectStore_DeleteEffect_Call{Call: _e.mock.On("DeleteEffect", ctx, id)}
 }
 
@@ -660,7 +660,7 @@ type mockeffectStore_GetEffectByID_Call struct {
 // GetEffectByID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id string
-func (_e *mockeffectStore_Expecter) GetEffectByID(ctx interface{}, id interface{}) *mockeffectStore_GetEffectByID_Call {
+func (_e *mockeffectStore_Expecter) GetEffectByID(ctx any, id any) *mockeffectStore_GetEffectByID_Call {
 	return &mockeffectStore_GetEffectByID_Call{Call: _e.mock.On("GetEffectByID", ctx, id)}
 }
 
@@ -730,7 +730,7 @@ type mockeffectStore_SearchEffects_Call struct {
 //   - limit int64
 //   - sortField string
 //   - sortOrder string
-func (_e *mockeffectStore_Expecter) SearchEffects(ctx interface{}, query interface{}, skip interface{}, limit interface{}, sortField interface{}, sortOrder interface{}) *mockeffectStore_SearchEffects_Call {
+func (_e *mockeffectStore_Expecter) SearchEffects(ctx any, query any, skip any, limit any, sortField any, sortOrder any) *mockeffectStore_SearchEffects_Call {
 	return &mockeffectStore_SearchEffects_Call{Call: _e.mock.On("SearchEffects", ctx, query, skip, limit, sortField, sortOrder)}
 }
 
@@ -807,7 +807,7 @@ type mockeffectStore_UpdateEffect_Call struct {
 // UpdateEffect is a helper method to define mock.On call
 //   - ctx context.Context
 //   - effect *model.Effect
-func (_e *mockeffectStore_Expecter) UpdateEffect(ctx interface{}, effect interface{}) *mockeffectStore_UpdateEffect_Call {
+func (_e *mockeffectStore_Expecter) UpdateEffect(ctx any, effect any) *mockeffectStore_UpdateEffect_Call {
 	return &mockeffectStore_UpdateEffect_Call{Call: _e.mock.On("UpdateEffect", ctx, effect)}
 }
 
@@ -864,7 +864,7 @@ type mockeffectStore_UpdateManufacturer_Call struct {
 // UpdateManufacturer is a helper method to define mock.On call
 //   - ctx context.Context
 //   - manufacturer string
-func (_e *mockeffectStore_Expecter) UpdateManufacturer(ctx interface{}, manufacturer interface{}) *mockeffectStore_UpdateManufacturer_Call {
+func (_e *mockeffectStore_Expecter) UpdateManufacturer(ctx any, manufacturer any) *mockeffectStore_UpdateManufacturer_Call {
 	return &mockeffectStore_UpdateManufacturer_Call{Call: _e.mock.On("UpdateManufacturer", ctx, manufacturer)}
 }
 
@@ -958,7 +958,7 @@ type mockeffectTypeStore_GetAllEffectTypes_Call struct {
 
 // GetAllEffectTypes is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *mockeffectTypeStore_Expecter) GetAllEffectTypes(ctx interface{}) *mockeffectTypeStore_GetAllEffectTypes_Call {
+func (_e *mockeffectTypeStore_Expecter) GetAllEffectTypes(ctx any) *mockeffectTypeStore_GetAllEffectTypes_Call {
 	return &mockeffectTypeStore_GetAllEffectTypes_Call{Call: _e.mock.On("GetAllEffectTypes", ctx)}
 }
 
@@ -1037,7 +1037,7 @@ type mockuserStore_CreateUser_Call struct {
 // CreateUser is a helper method to define mock.On call
 //   - ctx context.Context
 //   - user model.User
-func (_e *mockuserStore_Expecter) CreateUser(ctx interface{}, user interface{}) *mockuserStore_CreateUser_Call {
+func (_e *mockuserStore_Expecter) CreateUser(ctx any, user any) *mockuserStore_CreateUser_Call {
 	return &mockuserStore_CreateUser_Call{Call: _e.mock.On("CreateUser", ctx, user)}
 }
 
@@ -1070,22 +1070,24 @@ func (_c *mockuserStore_CreateUser_Call) RunAndReturn(run func(ctx context.Conte
 }
 
 // GetUserByEmail provides a mock function for the type mockuserStore
-func (_mock *mockuserStore) GetUserByEmail(ctx context.Context, email string) (model.User, bool) {
+func (_mock *mockuserStore) GetUserByEmail(ctx context.Context, email string) (*model.User, bool) {
 	ret := _mock.Called(ctx, email)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetUserByEmail")
 	}
 
-	var r0 model.User
+	var r0 *model.User
 	var r1 bool
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (model.User, bool)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*model.User, bool)); ok {
 		return returnFunc(ctx, email)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) model.User); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *model.User); ok {
 		r0 = returnFunc(ctx, email)
 	} else {
-		r0 = ret.Get(0).(model.User)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) bool); ok {
 		r1 = returnFunc(ctx, email)
@@ -1103,7 +1105,7 @@ type mockuserStore_GetUserByEmail_Call struct {
 // GetUserByEmail is a helper method to define mock.On call
 //   - ctx context.Context
 //   - email string
-func (_e *mockuserStore_Expecter) GetUserByEmail(ctx interface{}, email interface{}) *mockuserStore_GetUserByEmail_Call {
+func (_e *mockuserStore_Expecter) GetUserByEmail(ctx any, email any) *mockuserStore_GetUserByEmail_Call {
 	return &mockuserStore_GetUserByEmail_Call{Call: _e.mock.On("GetUserByEmail", ctx, email)}
 }
 
@@ -1125,12 +1127,142 @@ func (_c *mockuserStore_GetUserByEmail_Call) Run(run func(ctx context.Context, e
 	return _c
 }
 
-func (_c *mockuserStore_GetUserByEmail_Call) Return(user model.User, b bool) *mockuserStore_GetUserByEmail_Call {
+func (_c *mockuserStore_GetUserByEmail_Call) Return(user *model.User, b bool) *mockuserStore_GetUserByEmail_Call {
 	_c.Call.Return(user, b)
 	return _c
 }
 
-func (_c *mockuserStore_GetUserByEmail_Call) RunAndReturn(run func(ctx context.Context, email string) (model.User, bool)) *mockuserStore_GetUserByEmail_Call {
+func (_c *mockuserStore_GetUserByEmail_Call) RunAndReturn(run func(ctx context.Context, email string) (*model.User, bool)) *mockuserStore_GetUserByEmail_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetUserByID provides a mock function for the type mockuserStore
+func (_mock *mockuserStore) GetUserByID(ctx context.Context, userID string) (*model.User, error) {
+	ret := _mock.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUserByID")
+	}
+
+	var r0 *model.User
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*model.User, error)); ok {
+		return returnFunc(ctx, userID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *model.User); ok {
+		r0 = returnFunc(ctx, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// mockuserStore_GetUserByID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUserByID'
+type mockuserStore_GetUserByID_Call struct {
+	*mock.Call
+}
+
+// GetUserByID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID string
+func (_e *mockuserStore_Expecter) GetUserByID(ctx any, userID any) *mockuserStore_GetUserByID_Call {
+	return &mockuserStore_GetUserByID_Call{Call: _e.mock.On("GetUserByID", ctx, userID)}
+}
+
+func (_c *mockuserStore_GetUserByID_Call) Run(run func(ctx context.Context, userID string)) *mockuserStore_GetUserByID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *mockuserStore_GetUserByID_Call) Return(user *model.User, err error) *mockuserStore_GetUserByID_Call {
+	_c.Call.Return(user, err)
+	return _c
+}
+
+func (_c *mockuserStore_GetUserByID_Call) RunAndReturn(run func(ctx context.Context, userID string) (*model.User, error)) *mockuserStore_GetUserByID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListAllUsers provides a mock function for the type mockuserStore
+func (_mock *mockuserStore) ListAllUsers(ctx context.Context) ([]model.User, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListAllUsers")
+	}
+
+	var r0 []model.User
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]model.User, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) []model.User); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.User)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// mockuserStore_ListAllUsers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListAllUsers'
+type mockuserStore_ListAllUsers_Call struct {
+	*mock.Call
+}
+
+// ListAllUsers is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *mockuserStore_Expecter) ListAllUsers(ctx any) *mockuserStore_ListAllUsers_Call {
+	return &mockuserStore_ListAllUsers_Call{Call: _e.mock.On("ListAllUsers", ctx)}
+}
+
+func (_c *mockuserStore_ListAllUsers_Call) Run(run func(ctx context.Context)) *mockuserStore_ListAllUsers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *mockuserStore_ListAllUsers_Call) Return(users []model.User, err error) *mockuserStore_ListAllUsers_Call {
+	_c.Call.Return(users, err)
+	return _c
+}
+
+func (_c *mockuserStore_ListAllUsers_Call) RunAndReturn(run func(ctx context.Context) ([]model.User, error)) *mockuserStore_ListAllUsers_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1160,7 +1292,7 @@ type mockuserStore_UpdateUser_Call struct {
 // UpdateUser is a helper method to define mock.On call
 //   - ctx context.Context
 //   - user model.User
-func (_e *mockuserStore_Expecter) UpdateUser(ctx interface{}, user interface{}) *mockuserStore_UpdateUser_Call {
+func (_e *mockuserStore_Expecter) UpdateUser(ctx any, user any) *mockuserStore_UpdateUser_Call {
 	return &mockuserStore_UpdateUser_Call{Call: _e.mock.On("UpdateUser", ctx, user)}
 }
 
@@ -1243,7 +1375,7 @@ type mockdocumentIndex_Search_Call struct {
 
 // Search is a helper method to define mock.On call
 //   - query model.Query
-func (_e *mockdocumentIndex_Expecter) Search(query interface{}) *mockdocumentIndex_Search_Call {
+func (_e *mockdocumentIndex_Expecter) Search(query any) *mockdocumentIndex_Search_Call {
 	return &mockdocumentIndex_Search_Call{Call: _e.mock.On("Search", query)}
 }
 
@@ -1321,7 +1453,7 @@ type mockblobStore_DeleteByInfo_Call struct {
 
 // DeleteByInfo is a helper method to define mock.On call
 //   - ci *model.ContainerInfo
-func (_e *mockblobStore_Expecter) DeleteByInfo(ci interface{}) *mockblobStore_DeleteByInfo_Call {
+func (_e *mockblobStore_Expecter) DeleteByInfo(ci any) *mockblobStore_DeleteByInfo_Call {
 	return &mockblobStore_DeleteByInfo_Call{Call: _e.mock.On("DeleteByInfo", ci)}
 }
 
@@ -1383,7 +1515,7 @@ type mockblobStore_Load_Call struct {
 
 // Load is a helper method to define mock.On call
 //   - ci *model.ContainerInfo
-func (_e *mockblobStore_Expecter) Load(ci interface{}) *mockblobStore_Load_Call {
+func (_e *mockblobStore_Expecter) Load(ci any) *mockblobStore_Load_Call {
 	return &mockblobStore_Load_Call{Call: _e.mock.On("Load", ci)}
 }
 
@@ -1447,7 +1579,7 @@ type mockblobStore_Save_Call struct {
 //   - data []byte
 //   - mimeType string
 //   - filename string
-func (_e *mockblobStore_Expecter) Save(data interface{}, mimeType interface{}, filename interface{}) *mockblobStore_Save_Call {
+func (_e *mockblobStore_Expecter) Save(data any, mimeType any, filename any) *mockblobStore_Save_Call {
 	return &mockblobStore_Save_Call{Call: _e.mock.On("Save", data, mimeType, filename)}
 }
 
@@ -1512,22 +1644,24 @@ func (_m *mockusersService) EXPECT() *mockusersService_Expecter {
 }
 
 // Authenticate provides a mock function for the type mockusersService
-func (_mock *mockusersService) Authenticate(ctx context.Context, email string, password string) (model.User, error) {
+func (_mock *mockusersService) Authenticate(ctx context.Context, email string, password string) (*model.User, error) {
 	ret := _mock.Called(ctx, email, password)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Authenticate")
 	}
 
-	var r0 model.User
+	var r0 *model.User
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (model.User, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (*model.User, error)); ok {
 		return returnFunc(ctx, email, password)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) model.User); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) *model.User); ok {
 		r0 = returnFunc(ctx, email, password)
 	} else {
-		r0 = ret.Get(0).(model.User)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
 		r1 = returnFunc(ctx, email, password)
@@ -1546,7 +1680,7 @@ type mockusersService_Authenticate_Call struct {
 //   - ctx context.Context
 //   - email string
 //   - password string
-func (_e *mockusersService_Expecter) Authenticate(ctx interface{}, email interface{}, password interface{}) *mockusersService_Authenticate_Call {
+func (_e *mockusersService_Expecter) Authenticate(ctx any, email any, password any) *mockusersService_Authenticate_Call {
 	return &mockusersService_Authenticate_Call{Call: _e.mock.On("Authenticate", ctx, email, password)}
 }
 
@@ -1573,33 +1707,35 @@ func (_c *mockusersService_Authenticate_Call) Run(run func(ctx context.Context, 
 	return _c
 }
 
-func (_c *mockusersService_Authenticate_Call) Return(user model.User, err error) *mockusersService_Authenticate_Call {
+func (_c *mockusersService_Authenticate_Call) Return(user *model.User, err error) *mockusersService_Authenticate_Call {
 	_c.Call.Return(user, err)
 	return _c
 }
 
-func (_c *mockusersService_Authenticate_Call) RunAndReturn(run func(ctx context.Context, email string, password string) (model.User, error)) *mockusersService_Authenticate_Call {
+func (_c *mockusersService_Authenticate_Call) RunAndReturn(run func(ctx context.Context, email string, password string) (*model.User, error)) *mockusersService_Authenticate_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Register provides a mock function for the type mockusersService
-func (_mock *mockusersService) Register(ctx context.Context, req users.RegisterRequest) (model.User, error) {
+func (_mock *mockusersService) Register(ctx context.Context, req users.RegisterRequest) (*model.User, error) {
 	ret := _mock.Called(ctx, req)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Register")
 	}
 
-	var r0 model.User
+	var r0 *model.User
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, users.RegisterRequest) (model.User, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, users.RegisterRequest) (*model.User, error)); ok {
 		return returnFunc(ctx, req)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, users.RegisterRequest) model.User); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, users.RegisterRequest) *model.User); ok {
 		r0 = returnFunc(ctx, req)
 	} else {
-		r0 = ret.Get(0).(model.User)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, users.RegisterRequest) error); ok {
 		r1 = returnFunc(ctx, req)
@@ -1617,7 +1753,7 @@ type mockusersService_Register_Call struct {
 // Register is a helper method to define mock.On call
 //   - ctx context.Context
 //   - req users.RegisterRequest
-func (_e *mockusersService_Expecter) Register(ctx interface{}, req interface{}) *mockusersService_Register_Call {
+func (_e *mockusersService_Expecter) Register(ctx any, req any) *mockusersService_Register_Call {
 	return &mockusersService_Register_Call{Call: _e.mock.On("Register", ctx, req)}
 }
 
@@ -1639,12 +1775,12 @@ func (_c *mockusersService_Register_Call) Run(run func(ctx context.Context, req 
 	return _c
 }
 
-func (_c *mockusersService_Register_Call) Return(user model.User, err error) *mockusersService_Register_Call {
+func (_c *mockusersService_Register_Call) Return(user *model.User, err error) *mockusersService_Register_Call {
 	_c.Call.Return(user, err)
 	return _c
 }
 
-func (_c *mockusersService_Register_Call) RunAndReturn(run func(ctx context.Context, req users.RegisterRequest) (model.User, error)) *mockusersService_Register_Call {
+func (_c *mockusersService_Register_Call) RunAndReturn(run func(ctx context.Context, req users.RegisterRequest) (*model.User, error)) *mockusersService_Register_Call {
 	_c.Call.Return(run)
 	return _c
 }
