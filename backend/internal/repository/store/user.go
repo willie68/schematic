@@ -37,14 +37,20 @@ func (s *MongoStore) CreateUser(ctx context.Context, user model.User) error {
 	return nil
 }
 
-// GetUserByEmail retrieves a user by email
+// GetUserByEmail retrieves a user by email (case-insensitive)
 func (s *MongoStore) GetUserByEmail(ctx context.Context, email string) (*model.User, bool) {
 	if s.usersCol == nil {
 		return nil, false
 	}
 
+	opts := options.FindOne().SetCollation(&options.Collation{
+		Locale:    "en",
+		Strength:  2, // Ignore case differences
+		CaseLevel: false,
+	})
+
 	var user model.User
-	err := s.usersCol.FindOne(ctx, bson.D{{Key: "email", Value: email}}).Decode(&user)
+	err := s.usersCol.FindOne(ctx, bson.D{{Key: "email", Value: email}}, opts).Decode(&user)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, false
 	}

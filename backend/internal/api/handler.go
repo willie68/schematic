@@ -351,7 +351,7 @@ func (h *Handler) me(w http.ResponseWriter, r *http.Request) {
 
 	// Try to fetch user from database
 	var userData map[string]any
-	user, exists := h.userStore.GetUserByEmail(r.Context(), sub)
+	user, exists := h.userStore.GetUserByEmail(r.Context(), strings.ToLower(sub))
 
 	if exists {
 		// User found in database
@@ -417,7 +417,7 @@ func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user from database
-	user, exists := h.userStore.GetUserByEmail(r.Context(), sub)
+	user, exists := h.userStore.GetUserByEmail(r.Context(), strings.ToLower(sub))
 	if !exists {
 		respondError(w, http.StatusNotFound, "user not found")
 		return

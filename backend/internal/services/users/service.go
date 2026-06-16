@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -77,7 +78,7 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (*model.Use
 	// Create user
 	user := model.User{
 		ID:        uuid.New().String(),
-		Email:     req.Email,
+		Email:     strings.ToLower(req.Email),
 		Password:  hashedPassword,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
@@ -107,7 +108,7 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (*model.Use
 
 // Authenticate validates user credentials and returns the user if valid
 func (s *Service) Authenticate(ctx context.Context, email, password string) (*model.User, error) {
-	user, exists := s.store.GetUserByEmail(ctx, email)
+	user, exists := s.store.GetUserByEmail(ctx, strings.ToLower(email))
 	if !exists {
 		return nil, errors.New("user not found")
 	}
@@ -126,7 +127,7 @@ func (s *Service) Authenticate(ctx context.Context, email, password string) (*mo
 
 // UserStatus sets the user's deactive flag to true or false based on the provided status
 func (s *Service) UserStatus(ctx context.Context, email string, deactive bool) error {
-	user, exists := s.store.GetUserByEmail(ctx, email)
+	user, exists := s.store.GetUserByEmail(ctx, strings.ToLower(email))
 
 	if !exists {
 		return errors.New("user not found")

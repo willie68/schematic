@@ -1,5 +1,15 @@
 # History
 
+## 0.3.2 - 2026-06-16 (Backend)
+
+- **Case-insensitive Login und Email-Normalisierung**:
+  - **Backend**: `GetUserByEmail()` mit MongoDB Collation für case-insensitive Suche
+  - **Backend**: Email-Index mit case-insensitiver Collation in `ensureIndexes()`
+  - **Service**: Email in `Register()`, `Authenticate()`, `UserStatus()` normalisiert (toLowerCase)
+  - **API-Handler**: Email in `me()` und `changePassword()` normalisiert
+  - **Index-Migration**: Alter Email-Index wird vor Erstellung des neuen gelöscht (verhindert Konflikt)
+  - **Ergebnis**: Benutzer können sich mit beliebiger Groß-/Kleinschreibung anmelden (User@Example.com, user@example.com, USER@EXAMPLE.COM)
+
 ## 0.3.1 - 2026-06-16 (Backend & Frontend)
 
 - **Verbessertes Benutzerverwaltungs-Interface**:

@@ -183,10 +183,19 @@ func (s *MongoStore) ensureIndexes() error {
 
 	userIndexes := []mongo.IndexModel{
 		{
-			Keys:    bson.D{{Key: "email", Value: 1}},
-			Options: options.Index().SetUnique(true),
+			Keys: bson.D{{Key: "email", Value: 1}},
+			Options: options.Index().
+				SetUnique(true).
+				SetCollation(&options.Collation{
+					Locale:    "en",
+					Strength:  2, // Ignore case differences
+					CaseLevel: false,
+				}),
 		},
 	}
+
+	// Drop old email index (if it exists without collation) to avoid conflicts
+	s.usersCol.Indexes().DropOne(ctx, "email_1")
 
 	_, err = s.usersCol.Indexes().CreateMany(ctx, userIndexes)
 	return err
