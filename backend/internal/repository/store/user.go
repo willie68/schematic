@@ -37,22 +37,22 @@ func (s *MongoStore) CreateUser(ctx context.Context, user model.User) error {
 }
 
 // GetUserByEmail retrieves a user by email
-func (s *MongoStore) GetUserByEmail(ctx context.Context, email string) (model.User, bool) {
+func (s *MongoStore) GetUserByEmail(ctx context.Context, email string) (*model.User, bool) {
 	if s.usersCol == nil {
-		return model.User{}, false
+		return nil, false
 	}
 
 	var user model.User
 	err := s.usersCol.FindOne(ctx, bson.D{{Key: "email", Value: email}}).Decode(&user)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return model.User{}, false
+		return nil, false
 	}
 	if err != nil {
 		s.logger.Error("get user failed", "error", err, "email", email)
-		return model.User{}, false
+		return nil, false
 	}
 
-	return user, true
+	return &user, true
 }
 
 // UpdateUser updates an existing user in the database

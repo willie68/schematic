@@ -86,16 +86,72 @@
         </div>
       </div>
     </Dialog>
+
+    <Dialog
+      v-model:visible="newUserVisible"
+      header="Neuer Benutzer"
+      :modal="true"
+      :closable="true"
+      style="width: 560px"
+    >
+      <div style="display:grid; gap:1rem;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+          <div>
+            <label style="font-weight:bold; color:#666; display:block; margin-bottom:0.5rem;">Vorname</label>
+            <InputText v-model="newUserForm.firstName" style="width:100%;" />
+          </div>
+          <div>
+            <label style="font-weight:bold; color:#666; display:block; margin-bottom:0.5rem;">Nachname</label>
+            <InputText v-model="newUserForm.lastName" style="width:100%;" />
+          </div>
+        </div>
+
+        <div>
+          <label style="font-weight:bold; color:#666; display:block; margin-bottom:0.5rem;">E-Mail</label>
+          <InputText v-model="newUserForm.email" type="email" style="width:100%;" />
+        </div>
+
+        <div>
+          <label style="font-weight:bold; color:#666; display:block; margin-bottom:0.5rem;">Passwort</label>
+          <InputText v-model="newUserForm.password" style="width:100%;" />
+          <small style="color:#999; display:block; margin-top:0.25rem;">Das Passwort ist vorbelegt und sichtbar, damit die manuelle Anlage schnell erfolgen kann.</small>
+        </div>
+
+        <div>
+          <label style="font-weight:bold; color:#666; display:block; margin-bottom:0.5rem;">Straße und Hausnummer</label>
+          <InputText v-model="newUserForm.street" style="width:100%;" />
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+          <div>
+            <label style="font-weight:bold; color:#666; display:block; margin-bottom:0.5rem;">PLZ</label>
+            <InputText v-model="newUserForm.zipCode" style="width:100%;" />
+          </div>
+          <div>
+            <label style="font-weight:bold; color:#666; display:block; margin-bottom:0.5rem;">Stadt</label>
+            <InputText v-model="newUserForm.city" style="width:100%;" />
+          </div>
+        </div>
+
+        <div style="color:#e74c3c; font-size:0.9em;" v-if="newUserError">{{ newUserError }}</div>
+
+        <div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1rem;">
+          <Button label="Abbrechen" severity="secondary" @click="newUserVisible = false" />
+          <Button label="Speichern" icon="pi pi-check" :loading="newUserSaving" @click="submitNewUser" />
+        </div>
+      </div>
+    </Dialog>
   </div>
 </template> 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Avatar from 'primevue/avatar'
 import Menu from 'primevue/menu'
 import Dialog from 'primevue/dialog'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
 import { useAuth } from '../composables/useAuth'
 import { useToast } from '../composables/useToast'
 import { APP_VERSION } from '../config'
@@ -109,6 +165,7 @@ const menu = ref(null)
 const infoVisible = ref(false)
 const accountVisible = ref(false)
 const changePasswordVisible = ref(false)
+const newUserVisible = ref(false)
 const info = ref({
   version: 'Loading...',
   status: 'Loading...',
@@ -121,38 +178,89 @@ const passwordForm = ref({
 })
 const passwordError = ref('')
 const passwordChanging = ref(false)
+const defaultAdminCreatedPassword = 'Start1234'
+const newUserForm = ref({
+  firstName: '',
+  lastName: '',
+  email: '',
+  password: defaultAdminCreatedPassword,
+  street: '',
+  zipCode: '',
+  city: '',
+})
+const newUserError = ref('')
+const newUserSaving = ref(false)
 
-const items = [
-  {
-    label: 'Mein Konto',
-    icon: 'pi pi-user',
-    command: () => {
-      fetchCurrentUser()
-      accountVisible.value = true
+const isAdmin = computed(() => {
+  const token = localStorage.getItem('schematics2_token')
+  if (!token) {
+    return false
+  }
+
+  const parts = token.split('.')
+  if (parts.length < 2) {
+    return false
+  }
+
+  try {
+    const normalized = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')
+    const payload = JSON.parse(atob(padded))
+    return Array.isArray(payload?.roles) && payload.roles.includes('admin')
+  } catch {
+    return false
+  }
+})
+
+const items = computed(() => {
+  const menuItems = [
+    {
+      label: 'Mein Konto',
+      icon: 'pi pi-user',
+      command: () => {
+        fetchCurrentUser()
+        accountVisible.value = true
+      },
     },
-  },
-  {
-    label: 'Passwort ändern',
-    icon: 'pi pi-key',
-    command: () => {
-      resetPasswordForm()
-      changePasswordVisible.value = true
+    {
+      label: 'Passwort ändern',
+      icon: 'pi pi-key',
+      command: () => {
+        resetPasswordForm()
+        changePasswordVisible.value = true
+      },
     },
-  },
-  {
-    label: 'Info',
-    icon: 'pi pi-info-circle',
-    command: () => { infoVisible.value = true },
-  },
-  {
-    label: 'Logout',
-    icon: 'pi pi-sign-out',
-    command: () => {
-      logout()
-      router.push('/')
+  ]
+
+  if (isAdmin.value) {
+    menuItems.push({
+      label: 'neuer Benutzer',
+      icon: 'pi pi-user-plus',
+      command: () => {
+        resetNewUserForm()
+        newUserVisible.value = true
+      },
+    })
+  }
+
+  menuItems.push(
+    {
+      label: 'Info',
+      icon: 'pi pi-info-circle',
+      command: () => { infoVisible.value = true },
     },
-  },
-]
+    {
+      label: 'Logout',
+      icon: 'pi pi-sign-out',
+      command: () => {
+        logout()
+        router.push('/')
+      },
+    },
+  )
+
+  return menuItems
+})
 
 function toggleMenu(event) {
   menu.value.toggle(event)
@@ -197,6 +305,19 @@ function resetPasswordForm() {
   passwordError.value = ''
 }
 
+function resetNewUserForm() {
+  newUserForm.value = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: defaultAdminCreatedPassword,
+    street: '',
+    zipCode: '',
+    city: '',
+  }
+  newUserError.value = ''
+}
+
 function validatePasswordForm() {
   passwordError.value = ''
   
@@ -239,6 +360,59 @@ async function submitPasswordChange() {
     passwordError.value = err.response?.data?.message || 'Fehler beim Ändern des Passworts'
   } finally {
     passwordChanging.value = false
+  }
+}
+
+function validateNewUserForm() {
+  newUserError.value = ''
+
+  const requiredFields = [
+    newUserForm.value.firstName,
+    newUserForm.value.lastName,
+    newUserForm.value.email,
+    newUserForm.value.password,
+    newUserForm.value.street,
+    newUserForm.value.zipCode,
+    newUserForm.value.city,
+  ]
+
+  if (requiredFields.some((value) => !value || !value.trim())) {
+    newUserError.value = 'Bitte alle Felder ausfüllen'
+    return false
+  }
+
+  if (newUserForm.value.password.length < 8) {
+    newUserError.value = 'Passwort muss mindestens 8 Zeichen lang sein'
+    return false
+  }
+
+  return true
+}
+
+async function submitNewUser() {
+  if (!validateNewUserForm()) {
+    return
+  }
+
+  newUserSaving.value = true
+  try {
+    await api.post('/api/v1/auth/register', {
+      firstName: newUserForm.value.firstName.trim(),
+      lastName: newUserForm.value.lastName.trim(),
+      email: newUserForm.value.email.trim(),
+      password: newUserForm.value.password,
+      street: newUserForm.value.street.trim(),
+      zipCode: newUserForm.value.zipCode.trim(),
+      city: newUserForm.value.city.trim(),
+    })
+
+    success('Benutzer wurde angelegt')
+    newUserVisible.value = false
+  } catch (err) {
+    newUserError.value = err.response?.data?.error || 'Fehler beim Anlegen des Benutzers'
+    showError(newUserError.value)
+  } finally {
+    newUserSaving.value = false
   }
 }
 

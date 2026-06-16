@@ -54,7 +54,7 @@ type effectTypeStore interface {
 
 type userStore interface {
 	CreateUser(ctx context.Context, user model.User) error
-	GetUserByEmail(ctx context.Context, email string) (model.User, bool)
+	GetUserByEmail(ctx context.Context, email string) (*model.User, bool)
 	UpdateUser(ctx context.Context, user model.User) error
 }
 
@@ -69,8 +69,8 @@ type blobStore interface {
 }
 
 type usersService interface {
-	Register(ctx context.Context, req users.RegisterRequest) (model.User, error)
-	Authenticate(ctx context.Context, email, password string) (model.User, error)
+	Register(ctx context.Context, req users.RegisterRequest) (*model.User, error)
+	Authenticate(ctx context.Context, email, password string) (*model.User, error)
 }
 
 type Handler struct {
@@ -92,7 +92,9 @@ type loginRequest struct {
 }
 
 type loginResponse struct {
-	Token string `json:"token"`
+	Token          string `json:"token"`
+	ChangePassword bool   `json:"changePassword"`
+	Email          string `json:"email"`
 }
 
 type infoResponse struct {
@@ -130,7 +132,6 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		api.Get("/info", h.info)
 
 		api.Post("/auth/login", h.login)
-		api.Post("/auth/register", h.register)
 
 		api.Get("/tags", h.listTags)
 		api.Get("/tags/suggest", h.suggestTags)
@@ -153,6 +154,8 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 			protected.Use(h.authMiddleware)
 			protected.Get("/users/me", h.me)
 			protected.Post("/users/change-password", h.changePassword)
+
+			protected.Post("/auth/register", h.register)
 
 			protected.Post("/documents", h.createDocument)
 			protected.Patch("/documents/{id}", h.updateDocument)
@@ -202,7 +205,7 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		respondJSON(w, http.StatusOK, loginResponse{Token: token})
+		respondJSON(w, http.StatusOK, loginResponse{Token: token, ChangePassword: false, Email: req.Username})
 		return
 	}
 
@@ -219,10 +222,16 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusOK, loginResponse{Token: token})
+	respondJSON(w, http.StatusOK, loginResponse{Token: token, ChangePassword: user.ChangePassword, Email: user.Email})
 }
 
 func (h *Handler) register(w http.ResponseWriter, r *http.Request) {
+	roles, ok := r.Context().Value(ctxRolesKey{}).([]string)
+	if !ok || !slices.Contains(roles, "admin") {
+		respondError(w, http.StatusForbidden, "only admins can register users")
+		return
+	}
+
 	var req users.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "invalid payload")
@@ -349,10 +358,11 @@ func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update password in database
+	// Update password in database and reset ChangePassword flag
 	user.Password = hashedPassword
 	user.Updated = time.Now().UTC().Unix()
-	if err := h.userStore.UpdateUser(r.Context(), user); err != nil {
+	user.ChangePassword = false
+	if err := h.userStore.UpdateUser(r.Context(), *user); err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to update password")
 		return
 	}

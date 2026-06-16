@@ -15,8 +15,9 @@ import (
 
 // userStore interface for user persistence
 type userStore interface {
+	GetUserByEmail(ctx context.Context, email string) (*model.User, bool)
 	CreateUser(ctx context.Context, user model.User) error
-	GetUserByEmail(ctx context.Context, email string) (model.User, bool)
+	UpdateUser(ctx context.Context, user model.User) error
 }
 
 // Service manages user operations with flood protection
@@ -51,7 +52,7 @@ type RegisterRequest struct {
 }
 
 // Register creates a new user with flood protection (serialized + min duration)
-func (s *Service) Register(ctx context.Context, req RegisterRequest) (model.User, error) {
+func (s *Service) Register(ctx context.Context, req RegisterRequest) (*model.User, error) {
 	start := time.Now()
 
 	// Lock: only one registration at a time
@@ -61,14 +62,14 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (model.User
 	// Validate input
 	if err := validateRegisterRequest(req); err != nil {
 		time.Sleep(time.Until(start.Add(s.minDuration)))
-		return model.User{}, err
+		return nil, err
 	}
 
 	// Hash password
 	hashedPassword, err := auth.HashPassword(req.Password)
 	if err != nil {
 		time.Sleep(time.Until(start.Add(s.minDuration)))
-		return model.User{}, fmt.Errorf("hash password: %w", err)
+		return nil, fmt.Errorf("hash password: %w", err)
 	}
 
 	// Create user
@@ -83,14 +84,15 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (model.User
 			ZipCode: req.ZipCode,
 			City:    req.City,
 		},
-		Created: time.Now().UTC().Unix(),
-		Updated: time.Now().UTC().Unix(),
+		Created:        time.Now().UTC().Unix(),
+		Updated:        time.Now().UTC().Unix(),
+		ChangePassword: true,
 	}
 
 	// Save to database
 	if err := s.store.CreateUser(ctx, user); err != nil {
 		time.Sleep(time.Until(start.Add(s.minDuration)))
-		return model.User{}, err
+		return nil, err
 	}
 
 	// Ensure minimum duration
@@ -98,22 +100,42 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (model.User
 
 	// Return user without password
 	user.Password = ""
-	return user, nil
+	return &user, nil
 }
 
 // Authenticate validates user credentials and returns the user if valid
-func (s *Service) Authenticate(ctx context.Context, email, password string) (model.User, error) {
+func (s *Service) Authenticate(ctx context.Context, email, password string) (*model.User, error) {
 	user, exists := s.store.GetUserByEmail(ctx, email)
 	if !exists {
-		return model.User{}, errors.New("user not found")
+		return nil, errors.New("user not found")
+	}
+
+	if user.Deactive {
+		return nil, errors.New("user is deactivated")
 	}
 
 	if err := auth.CheckPassword(user.Password, password); err != nil {
-		return model.User{}, errors.New("invalid password")
+		return nil, errors.New("invalid password")
 	}
 
 	user.Password = ""
 	return user, nil
+}
+
+// UserStatus sets the user's deactive flag to true or false based on the provided status
+func (s *Service) UserStatus(ctx context.Context, email string, deactive bool) error {
+	user, exists := s.store.GetUserByEmail(ctx, email)
+
+	if !exists {
+		return errors.New("user not found")
+	}
+
+	user.Deactive = deactive
+	if err := s.store.UpdateUser(ctx, *user); err != nil {
+		return fmt.Errorf("update user status: %w", err)
+	}
+
+	return nil
 }
 
 func validateRegisterRequest(req RegisterRequest) error {

@@ -1,5 +1,21 @@
 # History
 
+## 0.2.49 - 2026-06-16 (Backend & Frontend)
+
+- **Admin-gesteuerte Benutzeranlage**:
+  - **Backend**: `/api/v1/auth/register` Endpoint nun nur für Admin-Benutzer erreichbar (HTTP 403 für Nicht-Admins)
+  - **Frontend**: Menüpunkt "neuer Benutzer" erscheint nur für angemeldete Admins
+  - **Dialog**: Admin-Dialog zur manuellen Benutzeranlage mit Feldern: Vorname, Nachname, E-Mail, Passwort (vorbelegt), Adresse
+  - **Passwort-Vorbelegung**: Default-Passwort "Start1234" wird automatisch eingetragen und ist sichtbar (für schnelle Admin-Anlage)
+
+- **Erzwungenes Passwort-Ändern beim ersten Login**:
+  - **Backend**: User-Model um `ChangePassword` Bool-Flag erweitert
+  - **Register-Service**: Neue Benutzer erhalten automatisch `ChangePassword: true`
+  - **Login-Response**: Neue Felder `changePassword` (bool) und `email` (string) in der Login-Antwort
+  - **Frontend LoginView**: Bei `changePassword: true` wird sofort das Passwort-Ändern-Formular angezeigt
+  - **Erzwungener Flow**: Benutzer kann nicht zur App navigieren, bevor Passwort geändert ist
+  - **Flag-Reset**: Nach erfolgreichem Passwort-Wechsel wird `ChangePassword` auf `false` gesetzt
+
 ## 0.2.48 - 2026-06-02 (Backend & Frontend)
 
 - **Dokumentation auf aktuellen Codestand synchronisiert**:
