@@ -15,6 +15,7 @@ import (
 	"github.com/willie68/schematics2/backend/internal/logging"
 	"github.com/willie68/schematics2/backend/internal/repository/blob"
 	"github.com/willie68/schematics2/backend/internal/repository/store"
+	"github.com/willie68/schematics2/backend/internal/services/backup"
 	"github.com/willie68/schematics2/backend/internal/services/health"
 	"github.com/willie68/schematics2/backend/internal/services/shttp"
 	"github.com/willie68/schematics2/backend/internal/services/users"
@@ -53,6 +54,10 @@ func InitServices(inj do.Injector, cfg config.Config) error {
 		return err
 	}
 	do.ProvideValue(inj, index.New(inj))
+
+	if err = newBackup(inj); err != nil {
+		return err
+	}
 
 	return InitRESTService(inj, cfg)
 }
@@ -169,5 +174,14 @@ func newUserService(inj do.Injector) error {
 	userSvc := users.NewService(inj, 10*time.Second)
 	do.ProvideValue(inj, userSvc)
 
+	return nil
+}
+
+func newBackup(inj do.Injector) error {
+	backupSvc, err := backup.New(inj, backup.WithTimeout(8*time.Hour))
+	if err != nil {
+		return err
+	}
+	do.ProvideValue(inj, backupSvc)
 	return nil
 }
