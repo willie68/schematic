@@ -227,7 +227,7 @@ Content-Type: application/json
 ### 1) MongoDB starten (Docker)
 
 ```bash
-docker run -d --name mongodb -p 27017:27017 mongo:7
+docker run -d --name mongodb -p 27017:27017 mongo:8
 ```
 
 Oder für Entwicklung direkt lokal installieren.

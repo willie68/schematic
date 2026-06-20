@@ -48,6 +48,7 @@ type Profiling struct {
 
 type Repository struct {
 	RepositoryPath     string `yaml:"repositoryPath"`
+	BackupPath         string `yaml:"backupPath"`
 	ContainerMaxSizeMB int64  `yaml:"containerMaxSizeMB"`
 	CompressionType    string `yaml:"compressionType"` // "none", "gzip", "zstd"
 }

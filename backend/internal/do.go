@@ -55,7 +55,7 @@ func InitServices(inj do.Injector, cfg config.Config) error {
 	}
 	do.ProvideValue(inj, index.New(inj))
 
-	if err = newBackup(inj); err != nil {
+	if err = newBackup(inj, cfg); err != nil {
 		return err
 	}
 
@@ -146,6 +146,7 @@ func NewRouter(inj do.Injector) (http.Handler, error) {
 	r.Mount("/metrics/measurement", measurement.Routes(inj))
 	return r, nil
 }
+
 func ShutdownServices(inj do.Injector) {
 	inj.Shutdown()
 }
@@ -177,11 +178,12 @@ func newUserService(inj do.Injector) error {
 	return nil
 }
 
-func newBackup(inj do.Injector) error {
-	backupSvc, err := backup.New(inj, backup.WithTimeout(8*time.Hour))
+func newBackup(inj do.Injector, cfg config.Config) error {
+	backupSvc, err := backup.New(inj, backup.WithDuration(8*time.Hour), backup.WithPath(cfg.Repository.BackupPath))
 	if err != nil {
 		return err
 	}
 	do.ProvideValue(inj, backupSvc)
+
 	return nil
 }

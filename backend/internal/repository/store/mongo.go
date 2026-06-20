@@ -1,10 +1,15 @@
 package store
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
+	"os"
+	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -551,6 +556,101 @@ func (s *MongoStore) List() []model.Document {
 	}
 
 	return out
+}
+
+func (s *MongoStore) ExportBackup(ctx context.Context, dir string) error {
+	if s.db == nil {
+		return errors.New("mongodb not initialised")
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("create backup directory: %w", err)
+	}
+
+	collections, err := s.db.ListCollectionNames(ctx, bson.D{})
+	if err != nil {
+		return fmt.Errorf("list collections: %w", err)
+	}
+
+	collectionSet := make(map[string]struct{}, len(collections))
+	for _, name := range collections {
+		collectionSet[name] = struct{}{}
+	}
+	for _, name := range []string{documentsCollection, tagsCollection, manufacturersCollection, usersCollection, effectsCollection, effectTypesCollection} {
+		if _, exists := collectionSet[name]; !exists {
+			collections = append(collections, name)
+		}
+	}
+
+	sort.Strings(collections)
+
+	for _, name := range collections {
+		if err := s.exportCollection(ctx, name, filepath.Join(dir, name+".json")); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *MongoStore) exportCollection(ctx context.Context, collectionName, filePath string) (err error) {
+	cur, err := s.db.Collection(collectionName).Find(ctx, bson.D{})
+	if err != nil {
+		return fmt.Errorf("find collection %q: %w", collectionName, err)
+	}
+	defer cur.Close(ctx)
+
+	file, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("create collection file %q: %w", collectionName, err)
+	}
+	defer file.Close()
+
+	writer := bufio.NewWriter(file)
+	defer func() {
+		if flushErr := writer.Flush(); flushErr != nil && err == nil {
+			err = flushErr
+		}
+	}()
+
+	if _, err = io.WriteString(writer, "[\n"); err != nil {
+		return fmt.Errorf("write collection %q: %w", collectionName, err)
+	}
+
+	first := true
+	var doc bson.M
+	for cur.Next(ctx) {
+		doc = nil
+		if err = cur.Decode(&doc); err != nil {
+			return fmt.Errorf("decode collection %q: %w", collectionName, err)
+		}
+
+		if !first {
+			if _, err = io.WriteString(writer, ",\n"); err != nil {
+				return fmt.Errorf("write collection %q: %w", collectionName, err)
+			}
+		}
+		first = false
+
+		data, marshalErr := bson.MarshalExtJSONIndent(doc, false, false, "  ", "  ")
+		if marshalErr != nil {
+			return fmt.Errorf("marshal collection %q: %w", collectionName, marshalErr)
+		}
+		if _, err = writer.Write(data); err != nil {
+			return fmt.Errorf("write collection %q: %w", collectionName, err)
+		}
+	}
+	if err = cur.Err(); err != nil {
+		return fmt.Errorf("iterate collection %q: %w", collectionName, err)
+	}
+
+	if _, err = io.WriteString(writer, "\n]\n"); err != nil {
+		return fmt.Errorf("write collection %q: %w", collectionName, err)
+	}
+	if err = writer.Flush(); err != nil {
+		return fmt.Errorf("flush collection %q: %w", collectionName, err)
+	}
+
+	return nil
 }
 
 // Search executes a search using parsed query terms with regex and tag-based filtering.

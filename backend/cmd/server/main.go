@@ -25,6 +25,10 @@ type shttpsrv interface {
 	ShutdownServers()
 }
 
+type backupService interface {
+	Start() error
+}
+
 func main() {
 	cfg := config.LoadFromEnv()
 
@@ -59,6 +63,11 @@ func main() {
 	httpService := do.MustInvokeAs[shttpsrv](inj)
 
 	httpService.StartServers(router, healthHandler.Router())
+
+	backupSvc := do.MustInvokeAs[backupService](inj)
+	if err := backupSvc.Start(); err != nil {
+		log.Fatalf("start backup service: %v", err)
+	}
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
