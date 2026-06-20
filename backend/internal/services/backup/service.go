@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/samber/do/v2"
+	"github.com/willie68/gowillie68/pkg/fileutils"
 	"github.com/willie68/schematics2/backend/internal/domain/model"
 	"github.com/willie68/schematics2/backend/internal/logging"
 )
@@ -284,8 +285,8 @@ func (s *service) exportSingleDocumentFiles(dbDir, docID, manufacturer, modelNam
 }
 
 func prepareDocumentDir(dbDir, manufacturer, modelName string) (string, error) {
-	manufacturerDir := sanitizePathSegment(manufacturer)
-	modelDir := sanitizePathSegment(modelName)
+	manufacturerDir := fileutils.SanitizePathSegment(manufacturer)
+	modelDir := fileutils.SanitizePathSegment(modelName)
 	destDir := filepath.Join(dbDir, "documents", manufacturerDir, modelDir)
 	if err := os.MkdirAll(destDir, 0o755); err != nil {
 		return "", fmt.Errorf("create documents dir for %q/%q: %w", manufacturer, modelName, err)
@@ -304,7 +305,7 @@ func (s *service) exportSingleDocumentFile(docID string, index int, destDir stri
 		return
 	}
 
-	baseName := sanitizeFileName(file.Name)
+	baseName := fileutils.SanitizeFileName(file.Name)
 	if baseName == "" {
 		s.log.Warn("skip document file without filename", "docId", docID, "index", index)
 		return
@@ -314,101 +315,6 @@ func (s *service) exportSingleDocumentFile(docID string, index int, destDir stri
 	if err = os.WriteFile(filepath.Join(destDir, fileName), payload, 0o644); err != nil {
 		s.log.Error("skip document file: write failed", "docId", docID, "file", fileName, "error", err)
 	}
-}
-
-// sanitizePathSegment strips characters that are unsafe in directory names.
-func sanitizePathSegment(s string) string {
-	s = strings.TrimSpace(s)
-	replacer := strings.NewReplacer(
-		"/", "_",
-		"\\", "_",
-		":", "_",
-		"*", "_",
-		"?", "_",
-		"\"", "_",
-		"<", "_",
-		">", "_",
-		"|", "_",
-	)
-	s = replacer.Replace(s)
-	s = strings.Map(func(r rune) rune {
-		if r < 32 {
-			return -1
-		}
-		return r
-	}, s)
-	s = strings.TrimRight(s, " .")
-	if s == "" || s == "." || s == ".." {
-		return "unknown"
-	}
-	if isWindowsReservedName(s) {
-		return "_" + s
-	}
-	return s
-}
-
-func sanitizeFileName(name string) string {
-	base := filepath.Base(strings.TrimSpace(name))
-	if base == "" || base == "." || base == ".." {
-		return ""
-	}
-
-	ext := filepath.Ext(base)
-	stem := strings.TrimSuffix(base, ext)
-	stem = sanitizePathSegment(stem)
-	if stem == "" || stem == "unknown" {
-		stem = "file"
-	}
-
-	ext = strings.Map(func(r rune) rune {
-		if r < 32 {
-			return -1
-		}
-		if strings.ContainsRune("<>:\\|?*\"", r) {
-			return -1
-		}
-		return r
-	}, ext)
-	ext = strings.TrimRight(ext, " .")
-
-	if isWindowsReservedName(stem) {
-		stem = "_" + stem
-	}
-
-	return stem + ext
-}
-
-func isWindowsReservedName(s string) bool {
-	upper := strings.ToUpper(strings.TrimSpace(s))
-	if upper == "" {
-		return false
-	}
-	reserved := map[string]struct{}{
-		"CON":  {},
-		"PRN":  {},
-		"AUX":  {},
-		"NUL":  {},
-		"COM1": {},
-		"COM2": {},
-		"COM3": {},
-		"COM4": {},
-		"COM5": {},
-		"COM6": {},
-		"COM7": {},
-		"COM8": {},
-		"COM9": {},
-		"LPT1": {},
-		"LPT2": {},
-		"LPT3": {},
-		"LPT4": {},
-		"LPT5": {},
-		"LPT6": {},
-		"LPT7": {},
-		"LPT8": {},
-		"LPT9": {},
-	}
-	_, ok := reserved[upper]
-	return ok
 }
 
 // Shutdown stops the backup service gracefully. Needed to implement the do.Shutdownable interface.

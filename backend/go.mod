@@ -21,19 +21,23 @@ require (
 	github.com/klauspost/compress v1.18.6
 	github.com/rs/xid v1.6.0
 	github.com/stretchr/testify v1.11.1
-	github.com/willie68/gowillie68 v0.0.0-20260527064820-3ef43d9404d9
+	github.com/willie68/gowillie68 v0.0.0-20260620185210-59a5862f054a
 	go.mongodb.org/mongo-driver/v2 v2.6.0
 	golang.org/x/image v0.40.0
 )
 
 require (
 	github.com/ajg/form v1.5.1 // indirect
+	github.com/aphistic/golf v0.0.0-20180712155816-02c07f170c5a // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-chi/render v1.0.3 // indirect
+	github.com/mattn/go-colorable v0.1.15 // indirect
+	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/samber/go-type-to-string v1.8.0 // indirect
 	github.com/samber/lo v1.53.0 // indirect
 	github.com/samber/slog-common v0.22.0 // indirect
+	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.2.0 // indirect
