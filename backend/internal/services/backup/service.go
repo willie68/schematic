@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"archive/zip"
 	"bufio"
 	"context"
 	"encoding/json"
@@ -10,11 +11,13 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/samber/do/v2"
 	"github.com/willie68/gowillie68/pkg/fileutils"
+	"github.com/willie68/gowillie68/pkg/measurement"
 	"github.com/willie68/schematics2/backend/internal/domain/model"
 	"github.com/willie68/schematics2/backend/internal/logging"
 )
@@ -29,22 +32,29 @@ type blobStore interface {
 
 type Option struct {
 }
+type measurementService interface {
+	Start(name string) measurement.Monitor
+}
+
+const maxZipPartSize int64 = 500 * 1024 * 1024
 
 type service struct {
-	duration time.Duration
-	path     string
-	log      *slog.Logger
-	store    store
-	blob     blobStore
-	stopCh   chan struct{}
-	doneCh   chan struct{}
+	duration    time.Duration
+	path        string
+	log         *slog.Logger
+	store       store
+	blob        blobStore
+	measurement measurementService
+	stopCh      chan struct{}
+	doneCh      chan struct{}
 }
 
 func New(inj do.Injector, option ...func(*service)) (*service, error) {
 	s := &service{
-		log:   logging.New("backup"),
-		store: do.MustInvokeAs[store](inj),
-		blob:  do.MustInvokeAs[blobStore](inj),
+		log:         logging.New("backup"),
+		store:       do.MustInvokeAs[store](inj),
+		blob:        do.MustInvokeAs[blobStore](inj),
+		measurement: do.MustInvokeAs[measurementService](inj),
 	}
 	for _, opt := range option {
 		opt(s)
@@ -121,6 +131,9 @@ func (s *service) Backup() error {
 		return errors.New("backup blob store is not initialised")
 	}
 
+	mon := s.measurement.Start("backup")
+	defer mon.Stop()
+
 	timestamp := time.Now().UTC().Format("20060102T150405Z")
 	backupDir := filepath.Join(s.path, timestamp)
 	dbDir := filepath.Join(backupDir, "db")
@@ -134,8 +147,18 @@ func (s *service) Backup() error {
 	if err := s.exportDocumentFiles(dbDir); err != nil {
 		return fmt.Errorf("export document files: %w", err)
 	}
+	archivePaths, err := archiveBackupDirectory(backupDir, maxZipPartSize)
+	if err != nil {
+		return fmt.Errorf("archive backup directory: %w", err)
+	}
+	if err := os.RemoveAll(backupDir); err != nil {
+		return fmt.Errorf("remove backup directory after archiving: %w", err)
+	}
+	if err := cleanupOldBackupArchives(s.path, archivePaths); err != nil {
+		return fmt.Errorf("cleanup old backup archives: %w", err)
+	}
 
-	s.log.Info("backup completed", "path", backupDir)
+	s.log.Info("backup completed", "archives", archivePaths)
 	return nil
 }
 
@@ -316,6 +339,262 @@ func (s *service) exportSingleDocumentFile(docID string, index int, destDir stri
 		s.log.Error("skip document file: write failed", "docId", docID, "file", fileName, "error", err)
 	}
 }
+
+func archiveBackupDirectory(dir string, maxPartSize int64) (archivePaths []string, err error) {
+	files, err := collectBackupFiles(dir)
+	if err != nil {
+		return nil, err
+	}
+	if len(files) == 0 {
+		return nil, fmt.Errorf("backup directory %q is empty", dir)
+	}
+
+	defer func() {
+		if err == nil {
+			return
+		}
+		for _, archivePath := range archivePaths {
+			_ = os.Remove(archivePath)
+		}
+	}()
+
+	baseName := filepath.Base(dir)
+	baseDir := filepath.Dir(dir)
+	partIndex := 1
+	archive, err := newZipPartWriter(baseDir, baseName, partIndex)
+	if err != nil {
+		return nil, err
+	}
+	archivePaths = append(archivePaths, archive.path)
+
+	for _, file := range files {
+		if archive.shouldRotate(file.size, maxPartSize) {
+			if err = archive.close(); err != nil {
+				return archivePaths, err
+			}
+			partIndex++
+			archive, err = newZipPartWriter(baseDir, baseName, partIndex)
+			if err != nil {
+				return archivePaths, err
+			}
+			archivePaths = append(archivePaths, archive.path)
+		}
+
+		if err = archive.addFile(file); err != nil {
+			_ = archive.close()
+			return archivePaths, err
+		}
+	}
+
+	if err = archive.close(); err != nil {
+		return archivePaths, err
+	}
+
+	return archivePaths, nil
+}
+
+func cleanupOldBackupArchives(backupRoot string, keepArchives []string) error {
+	entries, err := os.ReadDir(backupRoot)
+	if err != nil {
+		return fmt.Errorf("read backup root: %w", err)
+	}
+
+	keepSet := make(map[string]struct{}, len(keepArchives))
+	for _, archive := range keepArchives {
+		keepSet[filepath.Clean(archive)] = struct{}{}
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if !isBackupArchiveFile(name) {
+			continue
+		}
+
+		archivePath := filepath.Clean(filepath.Join(backupRoot, name))
+		if _, keep := keepSet[archivePath]; keep {
+			continue
+		}
+
+		if err := os.Remove(archivePath); err != nil {
+			return fmt.Errorf("remove old archive %q: %w", archivePath, err)
+		}
+	}
+
+	return nil
+}
+
+func isBackupArchiveFile(name string) bool {
+	if !strings.HasSuffix(strings.ToLower(name), ".zip") {
+		return false
+	}
+
+	base := strings.TrimSuffix(name, ".zip")
+	parts := strings.Split(base, ".part")
+	if len(parts) != 2 {
+		return false
+	}
+
+	ts := parts[0]
+	idx := parts[1]
+	if len(ts) != 16 || len(idx) != 3 {
+		return false
+	}
+	if ts[8] != 'T' || ts[15] != 'Z' {
+		return false
+	}
+
+	for i := 0; i < len(ts); i++ {
+		if i == 8 || i == 15 {
+			continue
+		}
+		if ts[i] < '0' || ts[i] > '9' {
+			return false
+		}
+	}
+	for i := 0; i < len(idx); i++ {
+		if idx[i] < '0' || idx[i] > '9' {
+			return false
+		}
+	}
+
+	return true
+}
+
+type backupFile struct {
+	absPath string
+	relPath string
+	size    int64
+	mode    os.FileMode
+	modTime time.Time
+}
+
+type zipPartWriter struct {
+	path         string
+	file         *os.File
+	zipWriter    *zip.Writer
+	currentSize  int64
+	entriesCount int
+	closed       bool
+}
+
+func collectBackupFiles(dir string) ([]backupFile, error) {
+	files := make([]backupFile, 0)
+	err := filepath.WalkDir(dir, func(path string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() {
+			return nil
+		}
+
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		relPath, err := filepath.Rel(dir, path)
+		if err != nil {
+			return err
+		}
+		files = append(files, backupFile{
+			absPath: path,
+			relPath: filepath.ToSlash(relPath),
+			size:    info.Size(),
+			mode:    info.Mode(),
+			modTime: info.ModTime(),
+		})
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("collect backup files: %w", err)
+	}
+
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].relPath < files[j].relPath
+	})
+
+	return files, nil
+}
+
+func newZipPartWriter(baseDir, baseName string, partIndex int) (*zipPartWriter, error) {
+	archivePath := filepath.Join(baseDir, fmt.Sprintf("%s.part%03d.zip", baseName, partIndex))
+	file, err := os.Create(archivePath)
+	if err != nil {
+		return nil, fmt.Errorf("create archive part %q: %w", archivePath, err)
+	}
+
+	return &zipPartWriter{
+		path:      archivePath,
+		file:      file,
+		zipWriter: zip.NewWriter(file),
+	}, nil
+}
+
+func (z *zipPartWriter) shouldRotate(nextFileSize, maxPartSize int64) bool {
+	if z.entriesCount == 0 {
+		return false
+	}
+	estimatedNextSize := z.currentSize + nextFileSize + 16*1024
+	return estimatedNextSize > maxPartSize
+}
+
+func (z *zipPartWriter) addFile(file backupFile) error {
+	source, err := os.Open(file.absPath)
+	if err != nil {
+		return fmt.Errorf("open backup file %q: %w", file.relPath, err)
+	}
+	defer source.Close()
+
+	header, err := zip.FileInfoHeader(fileInfoAdapter{file: file})
+	if err != nil {
+		return fmt.Errorf("build zip header for %q: %w", file.relPath, err)
+	}
+	header.Name = file.relPath
+	header.Method = zip.Deflate
+
+	writer, err := z.zipWriter.CreateHeader(header)
+	if err != nil {
+		return fmt.Errorf("create zip entry for %q: %w", file.relPath, err)
+	}
+
+	written, err := io.Copy(writer, source)
+	if err != nil {
+		return fmt.Errorf("write zip entry for %q: %w", file.relPath, err)
+	}
+
+	z.entriesCount++
+	z.currentSize += written + 16*1024
+	return nil
+}
+
+func (z *zipPartWriter) close() error {
+	if z.closed {
+		return nil
+	}
+	z.closed = true
+
+	if err := z.zipWriter.Close(); err != nil {
+		_ = z.file.Close()
+		return fmt.Errorf("close zip writer for %q: %w", z.path, err)
+	}
+	if err := z.file.Close(); err != nil {
+		return fmt.Errorf("close archive file %q: %w", z.path, err)
+	}
+	return nil
+}
+
+type fileInfoAdapter struct {
+	file backupFile
+}
+
+func (f fileInfoAdapter) Name() string       { return filepath.Base(f.file.relPath) }
+func (f fileInfoAdapter) Size() int64        { return f.file.size }
+func (f fileInfoAdapter) Mode() os.FileMode  { return f.file.mode }
+func (f fileInfoAdapter) ModTime() time.Time { return f.file.modTime }
+func (f fileInfoAdapter) IsDir() bool        { return false }
+func (f fileInfoAdapter) Sys() any           { return nil }
 
 // Shutdown stops the backup service gracefully. Needed to implement the do.Shutdownable interface.
 func (s *service) Shutdown() {

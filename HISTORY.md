@@ -1,5 +1,16 @@
 # History
 
+## 0.3.3 - 2026-06-21 (Backend)
+
+- **Backup-Workflow erweitert und robuster gemacht**:
+  - Backup startet nach Service-Start mit initialer Verzögerung und läuft danach im konfigurierten Intervall
+  - MongoDB-Collections werden speicherschonend per Streaming in JSON exportiert
+  - `effects.json` und `documents.json` werden gestreamt verarbeitet, um referenzierte Blob-Dateien in den Backup-Baum zu exportieren
+  - Dokumentdateien werden strukturiert unter `db/documents/<manufacturer>/<model>/` abgelegt und mit indexbasierten Dateinamen versehen
+  - Pfad-/Dateinamen-Bereinigung für Windows (u.a. problematische Endungen und reservierte Namen)
+  - Erfolgreiche Backups werden in mehrteilige ZIP-Archive mit maximal 500 MB pro Datei geschrieben
+  - Nach erfolgreicher Archivierung wird der temporäre Backup-Ordner entfernt und alte Backup-ZIPs werden bereinigt
+
 ## 0.3.2 - 2026-06-16 (Backend)
 
 - **Case-insensitive Login und Email-Normalisierung**:

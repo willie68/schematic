@@ -40,7 +40,7 @@ metrics:
 # configure the logging system
 logging:
   level: debug
-  filename: ""
+  filename: "./logging/schematics2.log"
   gelf-url:
   gelf-port:
 
