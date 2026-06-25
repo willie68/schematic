@@ -14,6 +14,7 @@
   - Dateiklick öffnet auf Mobilgeräten einen Vollbild-Viewer
   - Unterstützung für alle bisher unterstützten Dateitypen im mobilen Vollbildmodus (inkl. PDF/Bild-Vorschau und Fallback-Ansicht)
   - Datei-Selektion reagiert zuverlässig bei jedem Tap (Event-Handling angepasst)
+  - Bildanzeige im mobilen Vollbild-Viewer ohne PrimeVue-Preview-Overlay (kein graues Auge-Popup)
 
 - **Layout- und Usability-Fixes**:
   - Scroll- und Höhenlogik in der Detailansicht überarbeitet, damit der Dateibereich wieder erreichbar ist

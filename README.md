@@ -19,6 +19,7 @@ Das Repository ist mit GitHub unter https://github.com/willie68/schematics2 verk
 - **Image Viewer**: Native Zoom, Pan, Rotate, und Download für Bilddateien mit automatischer TIFF→PNG-Konvertierung für Viewer
   - Unterstützte Formate: PNG, JPG, GIF, BMP, TIF/TIFF
   - TIFF-Dateien werden im Viewer als PNG angezeigt (kein Download-Overhead)
+  - Mobile Vollbildansicht für Bilder ohne überlagerte Preview-Hinweise
 - **Authentifizierung**: Eigener Authentifizierungs- und Autorisierungsdienst mit User Registration
 - **Private Documents**: Unterstützung für private und öffentliche Dokumente
 - **Datenschutz & Rechtliches**: Cookie-Hinweis, Datenschutz, Impressum und Haftungsausschluss im Frontend

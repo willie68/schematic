@@ -408,13 +408,11 @@
         </div>
 
         <div v-else-if="isImageFile(selectedFile)" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:auto; background:#fff;">
-          <Image
+          <img
             v-if="selectedFile.data"
             :src="'data:' + selectedFile.mimetype + ';base64,' + selectedFile.data"
             :alt="selectedFile.name"
-            preview
-            imageStyle="object-fit: contain; width: 100%; height: 100%; max-height: 100%;"
-            style="width: 100%; height: 100%;"
+            style="object-fit: contain; width: 100%; height: 100%; max-height: 100%;"
           />
           <div v-else class="mobile-file-viewer-placeholder">Bild wird geladen...</div>
         </div>
