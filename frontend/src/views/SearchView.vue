@@ -1,7 +1,34 @@
 <template>
   <section class="card">
-    <h2>Dokumentsuche</h2>
-    <p class="muted">Durchsuche {{ totalDocuments }} Schaltpläne, Dokumentationen und PDFs über Tags und Volltext.<br/> Suchoperatoren: <code>+Begriff</code> (erforderlich), <code>-Begriff</code> (ausschließen), <code>Begriff*</code> (Prefix-Matching). Mehrere Begriffe (ohne + oder -) werden als ODER verknüpft. <br/>Tags werden immer UND verknüpft.</p>
+    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem;" class="title-section">
+      <Button 
+        icon="pi pi-arrow-left" 
+        severity="secondary" 
+        text
+        v-tooltip.bottom="'Zur Startseite'"
+        @click="goHome()"
+        class="back-button-mobile"
+        style="padding:0.25rem; font-size:1rem;"
+      />
+      <h2 style="margin:0;">Dokumentsuche</h2>
+    </div>
+    <!-- Desktop: Always visible help text -->
+    <p class="muted help-text-desktop">Durchsuche {{ totalDocuments }} Schaltpläne, Dokumentationen und PDFs über Tags und Volltext.<br/> Suchoperatoren: <code>+Begriff</code> (erforderlich), <code>-Begriff</code> (ausschließen), <code>Begriff*</code> (Prefix-Matching). Mehrere Begriffe (ohne + oder -) werden als ODER verknüpft. <br/>Tags werden immer UND verknüpft.</p>
+    
+    <!-- Mobile: Collapsible help section -->
+    <Fieldset 
+      legend="Hilfe zu Suche" 
+      :toggleable="true" 
+      v-model:collapsed="showHelpPanel"
+      style="margin-bottom:1rem; margin-top:0;"
+      class="help-fieldset"
+    >
+      <p class="muted" style="margin:0;">
+        Durchsuche {{ totalDocuments }} Schaltpläne, Dokumentationen und PDFs über Tags und Volltext.<br/> 
+        Suchoperatoren: <code>+Begriff</code> (erforderlich), <code>-Begriff</code> (ausschließen), <code>Begriff*</code> (Prefix-Matching). Mehrere Begriffe (ohne + oder -) werden als ODER verknüpft. <br/>
+        Tags werden immer UND verknüpft.
+      </p>
+    </Fieldset>
     <div style="display:grid; gap:0.8rem; margin-bottom:1rem;">
       <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; align-items:center;">
         <InputText 
@@ -39,7 +66,7 @@
       </div>
     </div>
 
-    <div style="display:flex; gap:1rem; height:calc(100vh - 300px); margin-bottom:1rem;">
+    <div class="results-layout" style="display:flex; gap:1rem; height:calc(100vh - 300px); margin-bottom:1rem;">
       <!-- Treffertabelle (50%, nur wenn nicht versteckt) -->
       <div v-if="!hideSearchResults && !expandDetailPanel" style="flex:2; border:1px solid #e0e0e0; border-radius:4px; overflow:hidden;">
         <DataTable :value="results" stripedRows
@@ -76,7 +103,7 @@
       </div>
 
       <!-- Toggle-Leiste 1: zwischen Treffertabelle und Detail -->
-      <div v-if="(showDetailPanel || hideSearchResults) && !expandDetailPanel" style="width:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.3rem; padding:0.25rem; background:#f5f5f5; border-left:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">
+      <div v-if="(showDetailPanel || hideSearchResults) && !expandDetailPanel" class="splitter-bar" style="width:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.3rem; padding:0.25rem; background:#f5f5f5; border-left:1px solid #e0e0e0; border-right:1px solid #e0e0e0;">
         <Button 
           v-if="!hideSearchResults"
           icon="pi pi-angle-left" 
@@ -104,7 +131,7 @@
       </div>
 
       <!-- Detail Panel (25% wenn showDetailPanel=true, 50% wenn false) -->
-      <div v-if="showDetailPanel && selectedDocument && !expandDetailPanel" :style="{ flex: 1, overflow: 'auto', border: '1px solid #e0e0e0', borderRadius: '4px', background: '#f9f9f9', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }">
+      <div v-if="showDetailPanel && selectedDocument && !expandDetailPanel" class="detail-panel" :style="{ flex: 1, overflow: 'auto', border: '1px solid #e0e0e0', borderRadius: '4px', background: '#f9f9f9', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }">
         <h3 style="margin-top:0;">Details</h3>
         <div style="display:grid; gap:0.5rem; font-size:0.9em;">
           <div><strong>Hersteller:</strong> {{ selectedDocument.manufacturer }}</div>
@@ -117,18 +144,23 @@
         </div>
 
         <!-- Datei-Tabelle -->
-        <div style="flex:1; overflow-y:auto; border-top:1px solid #e0e0e0; padding-top:1rem;">
+        <div class="detail-files-section" style="flex:1; overflow-y:auto; border-top:1px solid #e0e0e0; padding-top:1rem;">
           <h4 style="margin-top:0;">Dateien</h4>
-          <div style="max-height:15rem; overflow-y:auto;">
+          <div class="detail-files-table-wrapper" style="max-height:15rem; overflow-y:auto;">
             <DataTable v-if="selectedDocument.files && selectedDocument.files.length > 0" 
               :value="selectedDocument.files" 
               stripedRows
               size="small"
               selectionMode="single"
               v-model:selection="selectedFile"
-              @rowSelect="onFileSelect">
+              @rowClick="onFileSelect">
               <Column field="type" header="Type" style="width:5rem;">
-                <template #body="{ data }">{{ getDocTypeLabel(data.type) || data.type }}</template>
+                <template #body="{ data }">
+                  <span v-if="isMobileView" class="doc-type-icon" :title="getDocTypeLabel(data.type) || data.type">
+                    <i :class="getDocTypeIcon(data.type)"></i>
+                  </span>
+                  <span v-else>{{ getDocTypeLabel(data.type) || data.type }}</span>
+                </template>
               </Column>
               <Column field="name" header="Name">
                 <template #body="{ data }">{{ data.name }}</template>
@@ -145,7 +177,7 @@
       </div>
 
       <!-- Fileviewer Panel (25% in Normalansicht, 75% in Vollansicht) -->
-      <div v-if="selectedDocument && selectedFile && !expandDetailPanel" :style="{ flex: hideSearchResults ? 3 : 1, border: '1px solid #e0e0e0', borderRadius: '4px', background: '#f9f9f9', display: 'flex', flexDirection: 'column', overflow: 'hidden' }">
+      <div v-if="!isMobileView && selectedDocument && selectedFile && !expandDetailPanel" :style="{ flex: hideSearchResults ? 3 : 1, border: '1px solid #e0e0e0', borderRadius: '4px', background: '#f9f9f9', display: 'flex', flexDirection: 'column', overflow: 'hidden' }">
         <!-- PDF Viewer -->
         <div v-if="isPdfFile(selectedFile)" style="width:100%; height:100%; display:flex; flex-direction:column;">
           <div style="flex-shrink:0; padding:0.5rem; background:#f0f0f0; border-bottom:1px solid #e0e0e0; text-align:center; font-size:0.9em;">
@@ -193,7 +225,7 @@
       </div>
 
       <!-- Großer Fileview (in Vollbildmodus) -->
-      <div v-if="expandDetailPanel && selectedDocument && selectedFile" style="flex:1; display:flex; gap:1rem; border:1px solid #e0e0e0; border-radius:4px; background:#f9f9f9; overflow:hidden; position:relative;">
+      <div v-if="!isMobileView && expandDetailPanel && selectedDocument && selectedFile" class="detail-panel-expanded" style="flex:1; display:flex; gap:1rem; border:1px solid #e0e0e0; border-radius:4px; background:#f9f9f9; overflow:hidden; position:relative;">
         <!-- Close-Button (oben rechts) -->
         <Button 
           icon="pi pi-angle-right"
@@ -204,7 +236,7 @@
           style="position:absolute; top:0.5rem; right:0.5rem; z-index:10; padding:0.5rem;" />
 
         <!-- Detail Panel (linke Seite) -->
-        <div style="flex:1; overflow:auto; padding:1rem; border-right:1px solid #e0e0e0; display:flex; flex-direction:column; gap:1rem;">
+        <div class="detail-panel-expanded-left" style="flex:1; overflow:auto; padding:1rem; border-right:1px solid #e0e0e0; display:flex; flex-direction:column; gap:1rem;">
           <h3 style="margin-top:0;">Details</h3>
           <div style="display:grid; gap:0.5rem; font-size:0.9em;">
             <div><strong>Hersteller:</strong> {{ selectedDocument.manufacturer }}</div>
@@ -217,18 +249,23 @@
           </div>
 
           <!-- Datei-Tabelle -->
-          <div style="flex:1; overflow-y:auto; border-top:1px solid #e0e0e0; padding-top:1rem;">
+          <div class="detail-files-section-expanded" style="flex:1; overflow-y:auto; border-top:1px solid #e0e0e0; padding-top:1rem;">
             <h4 style="margin-top:0;">Dateien</h4>
-            <div style="max-height:calc(100vh - 400px); overflow-y:auto;">
+            <div class="detail-files-table-wrapper-expanded" style="max-height:calc(100vh - 400px); overflow-y:auto;">
               <DataTable v-if="selectedDocument.files && selectedDocument.files.length > 0" 
                 :value="selectedDocument.files" 
                 stripedRows
                 size="small"
                 selectionMode="single"
                 v-model:selection="selectedFile"
-                @rowSelect="onFileSelect">
+                @rowClick="onFileSelect">
                 <Column field="type" header="Type" style="width:5rem;">
-                    <template #body="{ data }">{{ getDocTypeLabel(data.type) || data.type }}</template>
+                    <template #body="{ data }">
+                      <span v-if="isMobileView" class="doc-type-icon" :title="getDocTypeLabel(data.type) || data.type">
+                        <i :class="getDocTypeIcon(data.type)"></i>
+                      </span>
+                      <span v-else>{{ getDocTypeLabel(data.type) || data.type }}</span>
+                    </template>
                 </Column>
                 <Column field="name" header="Name">
                   <template #body="{ data }">{{ data.name }}</template>
@@ -354,25 +391,65 @@
 
     <UploadDialog v-model="showUploadDialog" @uploaded="search" />
     <EditDialog v-model="showEditDialog" :document="selectedDocument" @updated="onDocumentUpdated" />
+
+    <div v-if="isMobileView && showMobileFileViewer && selectedFile" class="mobile-file-viewer-overlay">
+      <div class="mobile-file-viewer-header">
+        <div class="mobile-file-viewer-title">{{ selectedFile.name }}</div>
+        <div style="display:flex; gap:0.35rem; align-items:center;">
+          <Button v-if="isImageFile(selectedFile)" icon="pi pi-download" severity="secondary" text @click="downloadImage()" />
+          <Button icon="pi pi-times" severity="secondary" text @click="showMobileFileViewer = false" />
+        </div>
+      </div>
+
+      <div class="mobile-file-viewer-content">
+        <div v-if="isPdfFile(selectedFile)" style="width:100%; height:100%; display:flex; flex-direction:column;">
+          <embed v-if="selectedFile.data" :src="'data:application/pdf;base64,' + selectedFile.data" type="application/pdf" style="flex:1; width:100%; border:none;" />
+          <div v-else class="mobile-file-viewer-placeholder">PDF wird geladen...</div>
+        </div>
+
+        <div v-else-if="isImageFile(selectedFile)" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:auto; background:#fff;">
+          <Image
+            v-if="selectedFile.data"
+            :src="'data:' + selectedFile.mimetype + ';base64,' + selectedFile.data"
+            :alt="selectedFile.name"
+            preview
+            imageStyle="object-fit: contain; width: 100%; height: 100%; max-height: 100%;"
+            style="width: 100%; height: 100%;"
+          />
+          <div v-else class="mobile-file-viewer-placeholder">Bild wird geladen...</div>
+        </div>
+
+        <div v-else class="mobile-file-viewer-placeholder" style="flex-direction:column; gap:0.5rem; text-align:center;">
+          <i class="pi pi-file" style="font-size:2rem; color:#888;"></i>
+          <div><strong>{{ selectedFile.name }}</strong></div>
+          <div>{{ selectedFile.type || selectedFile.mimetype || '-' }}</div>
+          <div v-if="selectedFile.page">Seite {{ selectedFile.page }}</div>
+          <div>Vorschau für diesen Dateityp nicht verfügbar.</div>
+        </div>
+      </div>
+    </div>
   </section>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import InputText from 'primevue/inputtext'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Dropdown from 'primevue/dropdown'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import Fieldset from 'primevue/fieldset'
 import UploadDialog from '../components/UploadDialog.vue'
 import EditDialog from '../components/EditDialog.vue'
 import Image from 'primevue/image'
 import api from '../services/api'
 import { useAuth } from '../composables/useAuth'
 import { useToast } from '../composables/useToast'
-import { getDocTypeLabel } from '../constants/docTypes'
+import { getDocTypeLabel, getDocTypeIcon } from '../constants/docTypes'
 
+const router = useRouter()
 const { isLoggedIn } = useAuth()
 const { info } = useToast()
 
@@ -380,10 +457,12 @@ const query = ref('')
 const selectedTags = ref([])
 const suggestedTags = ref([])
 const results = ref([])
+const showHelpPanel = ref(false) // Collapsed by default on mobile
 const showUploadDialog = ref(false)
 const showEditDialog = ref(false)
 const selectedDocument = ref(null)
 const selectedFile = ref(null)
+const showMobileFileViewer = ref(false)
 const showDetailPanel = ref(false)
 const expandDetailPanel = ref(false)
 const hideSearchResults = ref(false)
@@ -401,11 +480,20 @@ const totalDocuments = ref(null)
 const sortField = ref(null)
 const sortOrder = ref(null)
 const privateOnly = ref(false)
+const isMobileView = ref(false)
+
+function updateViewportState() {
+  isMobileView.value = window.innerWidth <= 767
+}
 
 function toTags() {
   return selectedTags.value
     .map((tag) => String(tag || '').trim())
     .filter(Boolean)
+}
+
+function goHome() {
+  router.push('/')
 }
 
 async function loadAppInfo() {
@@ -437,6 +525,8 @@ function copyDocumentLink() {
 }
 
 onMounted(async () => {
+  updateViewportState()
+  window.addEventListener('resize', updateViewportState)
   loadAppInfo()
   
   // Check if document ID is in URL parameters
@@ -450,19 +540,24 @@ onMounted(async () => {
       if (data) {
         selectedDocument.value = data
         selectedFile.value = null
-        if (data.files && data.files.length > 0) {
+        showMobileFileViewer.value = false
+        if (!isMobileView.value && data.files && data.files.length > 0) {
           selectedFile.value = data.files[0]
           await loadFileData(selectedFile.value)
         }
-        expandDetailPanel.value = true
+        expandDetailPanel.value = !isMobileView.value
         hideSearchResults.value = true
-        showDetailPanel.value = false
+        showDetailPanel.value = isMobileView.value
       }
     } catch (err) {
       console.error('Dokument nicht gefunden:', err)
       info('Dokument nicht gefunden')
     }
   }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateViewportState)
 })
 
 async function onTagSuggest(event) {
@@ -522,6 +617,7 @@ async function search(resetPage = true) {
     // Reset detail panel when searching
     selectedDocument.value = null
     selectedFile.value = null
+    showMobileFileViewer.value = false
     showDetailPanel.value = false
     expandDetailPanel.value = false
 
@@ -559,11 +655,13 @@ async function search(resetPage = true) {
 function selectDocument(event) {
   selectedDocument.value = event.data.document
   selectedFile.value = null
+  showMobileFileViewer.value = false
   showDetailPanel.value = true
-  hideSearchResults.value = false
+  hideSearchResults.value = isMobileView.value
+  expandDetailPanel.value = false
   
   // Erste Datei automatisch selektieren, falls vorhanden
-  if (selectedDocument.value.files && selectedDocument.value.files.length > 0) {
+  if (!isMobileView.value && selectedDocument.value.files && selectedDocument.value.files.length > 0) {
     selectedFile.value = selectedDocument.value.files[0]
     // Lade die Datei automatisch
     if (!selectedFile.value.data) {
@@ -572,11 +670,19 @@ function selectDocument(event) {
   }
 }
 
-function onFileSelect(event) {
+async function onFileSelect(event) {
   selectedFile.value = event.data
+
+  if (isMobileView.value) {
+    if (!selectedFile.value.data) {
+      await loadFileData(selectedFile.value)
+    }
+    showMobileFileViewer.value = true
+    return
+  }
   
   // Lade die Datei, falls nicht bereits vorhanden
-  if (!selectedFile.value.data) {
+  if (!isMobileView.value && !selectedFile.value.data) {
     loadFileData(selectedFile.value)
   }
 }
@@ -704,5 +810,205 @@ async function onDocumentUpdated() {
 
 :deep(.selected-row:hover) {
   background-color: #bbdefb !important;
+}
+
+/* Help fieldset - only on mobile */
+.help-fieldset {
+  display: none;
+  margin-bottom: 1rem;
+}
+
+.title-section {
+  margin-bottom: 1rem;
+}
+
+.help-text-desktop {
+  display: block;
+}
+
+.doc-type-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  color: #2f4b6e;
+}
+
+.detail-panel,
+.detail-panel-expanded,
+.detail-panel-expanded-left {
+  min-height: 0;
+}
+
+.detail-files-section,
+.detail-files-section-expanded {
+  min-height: auto !important;
+  flex: 0 0 auto !important;
+  overflow: visible !important;
+}
+
+.detail-files-table-wrapper,
+.detail-files-table-wrapper-expanded {
+  max-height: none !important;
+  overflow-y: visible !important;
+}
+
+/* On mobile, show fieldset and hide desktop text */
+@media (max-width: 767px) {
+  .doc-type-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .mobile-file-viewer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-file-viewer-header {
+    height: 3rem;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0.5rem;
+    background: #f8f9fa;
+  }
+
+  .mobile-file-viewer-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 0.5rem;
+  }
+
+  .mobile-file-viewer-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+  }
+
+  .mobile-file-viewer-placeholder {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    padding: 1rem;
+  }
+
+  .detail-panel {
+    min-height: 0;
+    padding: 0.65rem !important;
+    gap: 0.65rem !important;
+    overflow-y: auto !important;
+  }
+
+  .detail-files-section {
+    min-height: auto !important;
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+  }
+
+  .detail-files-table-wrapper {
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
+
+  .results-layout {
+    gap: 0 !important;
+  }
+
+  .splitter-bar {
+    width: 12px !important;
+    padding: 0 !important;
+    gap: 0.15rem !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+
+  .splitter-bar :deep(.p-button) {
+    padding: 0.05rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .title-section {
+    margin-bottom: 0 !important;
+  }
+  
+  .help-fieldset {
+    display: block !important;
+    margin: 0.5rem 0 0.5rem 0 !important;
+    padding: 0 !important;
+  }
+  
+  .help-text-desktop {
+    display: none !important;
+  }
+  
+  /* Reduce fieldset to minimal box */
+  .help-fieldset :deep(.p-fieldset) {
+    border: none !important;
+    border-bottom: 1px solid #ddd !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  /* Minimize legend/header area */
+  .help-fieldset :deep(.p-fieldset-legend) {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 1.5rem !important;
+  }
+  
+  /* Minimize text in legend */
+  .help-fieldset :deep(.p-fieldset-legend-text) {
+    padding: 0 0.3rem !important;
+    font-size: 0.8rem !important;
+    font-weight: 400 !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    display: inline !important;
+  }
+  
+  /* Make toggle button very compact */
+  .help-fieldset :deep(.p-fieldset-toggle-button) {
+    width: auto !important;
+    height: auto !important;
+    min-width: auto !important;
+    padding: 0 0.2rem !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  /* Make icon very small */
+  .help-fieldset :deep(.p-icon) {
+    font-size: 0.65rem !important;
+    width: 0.65rem !important;
+    height: 0.65rem !important;
+  }
+  
+  /* Reduce content padding */
+  .help-fieldset :deep(.p-fieldset-content) {
+    padding: 0.5rem 0 !important;
+    margin: 0 !important;
+  }
 }
 </style>

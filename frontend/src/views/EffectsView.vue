@@ -1,7 +1,18 @@
 <template>
   <section class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-      <h2 style="margin:0;">Effektdatenbank</h2>
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <Button 
+          icon="pi pi-arrow-left" 
+          severity="secondary" 
+          text
+          v-tooltip.bottom="'Zur Startseite'"
+          @click="goHome()"
+          class="back-button-mobile"
+          style="padding:0.25rem; font-size:1rem;"
+        />
+        <h2 style="margin:0;">Effektdatenbank</h2>
+      </div>
       <Button 
         icon="pi pi-envelope" 
         label="Vorschlag" 
@@ -254,6 +265,10 @@ const selectedEffectDetail = ref(null)
 const showUploadDialog = ref(false)
 const effectTypes = ref([])
 const effectTypeMap = ref({}) // TypeName -> German Translation
+
+function goHome() {
+  router.push('/')
+}
 
 onMounted(() => {
   search()

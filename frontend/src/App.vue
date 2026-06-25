@@ -1,7 +1,7 @@
 <template>
   <div class="shell">
-    <header class="card" style="margin-bottom: 1rem">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap: 1rem; flex-wrap: wrap;">
+    <header class="card app-header" :class="{ 'hide-on-secondary-mobile': hideHeaderOnMobile }" style="margin-bottom: 1rem">
+      <div class="app-header-content" style="display:flex; align-items:center; justify-content:space-between; gap: 1rem; flex-wrap: wrap;">
         <div>
           <h1 style="margin-bottom:0.2rem">Schematics2</h1>
         </div>
@@ -55,8 +55,8 @@
 </template>
 
 <script setup>
-import { RouterLink, RouterView, useRouter } from 'vue-router'
-import { onMounted } from 'vue'
+import { RouterView, useRouter, useRoute } from 'vue-router'
+import { onMounted, computed } from 'vue'
 import Avatar from 'primevue/avatar'
 import Tooltip from 'primevue/tooltip'
 import UserMenu from './components/UserMenu.vue'
@@ -68,8 +68,15 @@ import { useToast } from './composables/useToast'
 import { setApiErrorHandler } from './services/api'
 
 const router = useRouter()
+const route = useRoute()
 const { isLoggedIn, logout } = useAuth()
 const { error: showError } = useToast()
+
+// Hide header on search and effects pages on mobile devices
+const hideHeaderOnMobile = computed(() => {
+  const currentPath = route.path || ''
+  return currentPath === '/search' || currentPath.startsWith('/effects')
+})
 
 // Directive for tooltips
 const vTooltip = Tooltip
@@ -87,6 +94,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.app-header {
+  margin-bottom: 1rem;
+}
+
+.app-header-content {
+  gap: 1rem;
+}
+
 .home-avatar {
   background-color: #999;
   color: #fff;
@@ -110,5 +125,41 @@ onMounted(() => {
 .home-avatar:hover,
 .nav-avatar:hover {
   opacity: 0.85;
+}
+
+/* Mobile responsive - portrait (< 576px) */
+@media (max-width: 575px) {
+  .app-header.hide-on-secondary-mobile {
+    display: none;
+  }
+
+  .app-header-content {
+    gap: 0.5rem;
+  }
+
+  .home-avatar,
+  .nav-avatar {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Mobile responsive - landscape (576px - 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+  .app-header {
+    margin-bottom: 0.875rem;
+  }
+
+  .app-header-content {
+    gap: 0.75rem;
+  }
+
+  .home-avatar,
+  .nav-avatar {
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 0.9rem;
+  }
 }
 </style>

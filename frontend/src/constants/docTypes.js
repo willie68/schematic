@@ -28,3 +28,27 @@ export function getDocTypeByValue(value) {
 export function getDocTypeLabel(value) {
   return getDocTypeByValue(value)?.label
 }
+
+/**
+ * Get a PrimeIcon class for a doc type value.
+ * @param {string} value - The value of the doc type
+ * @returns {string} PrimeIcon class name
+ */
+export function getDocTypeIcon(value) {
+  switch (value) {
+    case 'schematic':
+      return 'pi pi-sitemap'
+    case 'manual':
+      return 'pi pi-book'
+    case 'datasheet':
+      return 'pi pi-table'
+    case 'image':
+      return 'pi pi-image'
+    case 'service':
+      return 'pi pi-cog'
+    case 'certificate':
+      return 'pi pi-shield'
+    default:
+      return 'pi pi-file'
+  }
+}

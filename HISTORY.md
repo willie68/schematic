@@ -1,5 +1,24 @@
 # History
 
+## 0.3.4 - 2026-06-25 (Backend & Frontend)
+
+- **Mobile Suche und Detailansicht deutlich verbessert**:
+  - Header in der mobilen Suche/Effektdatenbank ausgeblendet, in der Einstiegsseite weiterhin sichtbar
+  - In Such- und Effekttitel mobile Zurück-Navigation per Pfeil zur Startseite ergänzt
+  - Hilfetext in der Suche auf Mobilgeräten als kompakter, einklappbarer Bereich umgesetzt
+  - Splitter zwischen Trefferliste und Details auf Mobilgeräten verschlankt; Abstände reduziert
+  - Bei Auswahl eines Treffers wird die Detailansicht mobil automatisch in voller Breite geöffnet
+  - Dateitypen in der mobilen Dateitabelle als Icons statt Textlabels dargestellt
+
+- **Mobile Dateiansicht überarbeitet**:
+  - Dateiklick öffnet auf Mobilgeräten einen Vollbild-Viewer
+  - Unterstützung für alle bisher unterstützten Dateitypen im mobilen Vollbildmodus (inkl. PDF/Bild-Vorschau und Fallback-Ansicht)
+  - Datei-Selektion reagiert zuverlässig bei jedem Tap (Event-Handling angepasst)
+
+- **Layout- und Usability-Fixes**:
+  - Scroll- und Höhenlogik in der Detailansicht überarbeitet, damit der Dateibereich wieder erreichbar ist
+  - Mobile Toasts kompakter und minimalistischer gestaltet, mit robuster Darstellung ohne Abschneiden
+
 ## 0.3.3 - 2026-06-21 (Backend)
 
 - **Backup-Workflow erweitert und robuster gemacht**:
