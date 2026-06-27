@@ -1,5 +1,20 @@
 # History
 
+## 0.3.4 - 2026-06-27 (Backend & Frontend)
+
+- **Feature: Share Document (Issue #4) vollständig umgesetzt**:
+  - **Backend**: Share-Erzeugung abgesichert (nur Owner/Admin, JWT erforderlich)
+  - **Backend**: Neue öffentliche Share-Endpunkte:
+    - `GET /api/v1/shares/{link}` für Dokumentzugriff über Share-Link
+    - `GET /api/v1/shares/{link}/files/{filename}` für Dateidownload über Share-Link
+  - **Backend**: Ablaufprüfung für Shares (`410 Gone` bei abgelaufenem Share)
+  - **Backend**: Share-Persistenz in MongoDB robust gemacht (Mongo `_id` als ObjectID, Ausgabe als Hex-Share-ID)
+  - **Frontend**: Dokumentansicht unterstützt `share`-Query-Parameter
+  - **Frontend**: Dateiabrufe verwenden bei aktivem Share die neuen Share-Endpunkte
+  - **Frontend**: "Link kopieren" erzeugt jetzt einen echten Share-Link über die API
+  - **Frontend**: Generierte Share-Links zeigen auf `/client/search?share=...` statt auf Dokument-IDs
+  - **Frontend**: Ein-Datei-Shared-Dokumente bleiben beim Klick auf die Dateizeile stabil geöffnet
+
 ## 0.3.3 - 2026-06-21 (Backend)
 
 - **Backup-Workflow erweitert und robuster gemacht**:

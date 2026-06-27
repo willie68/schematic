@@ -34,6 +34,7 @@ type documentStore interface {
 	ListTags(ctx context.Context) ([]model.Tag, error)
 	SuggestTags(ctx context.Context, prefix string, limit int) ([]model.Tag, error)
 	SuggestManufacturers(ctx context.Context, prefix string, limit int) ([]string, error)
+	HasID(ctx context.Context, id string) bool
 	GetByID(ctx context.Context, id string) (model.Document, error)
 	DeleteByID(ctx context.Context, id string) error
 	CountAll(ctx context.Context) (int64, error)
@@ -75,6 +76,11 @@ type usersService interface {
 	Authenticate(ctx context.Context, email, password string) (*model.User, error)
 }
 
+type shareService interface {
+	CreateShare(ctx context.Context, share *model.Share) (string, error)
+	GetShare(ctx context.Context, link string) (*model.Share, error)
+}
+
 type Handler struct {
 	cfg             config.Config
 	log             *slog.Logger
@@ -85,6 +91,7 @@ type Handler struct {
 	blob            blobStore
 	userSvc         usersService
 	userStore       userStore
+	shareSvc        shareService
 	adminPW         string
 }
 
@@ -123,6 +130,7 @@ func NewHandler(i do.Injector) *Handler {
 		blob:            do.MustInvokeAs[blobStore](i),
 		userSvc:         do.MustInvokeAs[usersService](i),
 		userStore:       do.MustInvokeAs[userStore](i),
+		shareSvc:        do.MustInvokeAs[shareService](i),
 		adminPW:         hash,
 	}
 }
@@ -145,6 +153,8 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		api.Get("/documents/search", h.searchDocuments)
 		api.Get("/documents/{id}", h.getDocument)
 		api.Get("/documents/{id}/files/{filename}", h.downloadFile)
+		api.Get("/shares/{link}", h.getSharedDocument)
+		api.Get("/shares/{link}/files/{filename}", h.downloadSharedFile)
 
 		api.Get("/effects/search", h.searchEffects)
 		api.Get("/effects/{id}/image", h.getEffectImage)
@@ -164,6 +174,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 			protected.Post("/documents", h.createDocument)
 			protected.Patch("/documents/{id}", h.updateDocument)
 			protected.Delete("/documents/{id}", h.deleteDocument)
+			protected.Post("/documents/{id}/shares", h.createShare)
 
 			protected.Post("/effects", h.createEffect)
 			protected.Patch("/effects/{id}", h.updateEffect)
@@ -1415,4 +1426,158 @@ func normTags(tags []string) []string {
 		}
 	}
 	return normTags
+}
+
+func (h *Handler) createShare(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	documentID := chi.URLParam(r, "id")
+
+	if documentID == "" {
+		respondError(w, http.StatusBadRequest, "document ID is required")
+		return
+	}
+
+	if !h.docStore.HasID(ctx, documentID) {
+		respondError(w, http.StatusNotFound, "document not found")
+		return
+	}
+
+	// Create a new share
+	share := &model.Share{
+		DocumentID: documentID,
+		CreatedAt:  time.Now(),
+		ValidTo:    time.Now().Add(30 * 24 * time.Hour),
+		Owner:      h.getAuthenticatedUser(r),
+	}
+
+	shareID, err := h.shareSvc.CreateShare(ctx, share)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to create share")
+		return
+	}
+
+	scheme := "http"
+	if xfProto := strings.TrimSpace(r.Header.Get("X-Forwarded-Proto")); xfProto != "" {
+		scheme = strings.Split(xfProto, ",")[0]
+	} else if r.TLS != nil {
+		scheme = "https"
+	}
+
+	baseURL := fmt.Sprintf("%s://%s%s/client/search", scheme, r.Host, version.ClientBasePath)
+	query := url.Values{}
+	query.Set("share", shareID)
+	shareURL := baseURL + "?" + query.Encode()
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"status": "created",
+		"id":     shareID,
+		"link":   shareURL,
+	})
+}
+
+func (h *Handler) getSharedDocument(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	share, status, err := h.resolveShare(ctx, chi.URLParam(r, "link"))
+	if err != nil {
+		respondError(w, status, err.Error())
+		return
+	}
+
+	doc, err := h.docStore.GetByID(ctx, share.DocumentID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "document not found")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, doc)
+}
+
+func (h *Handler) downloadSharedFile(w http.ResponseWriter, r *http.Request) {
+	filename := chi.URLParam(r, "filename")
+	if strings.TrimSpace(filename) == "" {
+		respondError(w, http.StatusBadRequest, "filename is required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	share, status, err := h.resolveShare(ctx, chi.URLParam(r, "link"))
+	if err != nil {
+		respondError(w, status, err.Error())
+		return
+	}
+
+	doc, err := h.docStore.GetByID(ctx, share.DocumentID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "document not found")
+		return
+	}
+
+	var file *model.DocumentFile
+	for i := range doc.Files {
+		if doc.Files[i].Name == filename {
+			file = &doc.Files[i]
+			break
+		}
+	}
+
+	if file == nil {
+		respondError(w, http.StatusNotFound, "file not found")
+		return
+	}
+
+	if file.Container == nil {
+		respondError(w, http.StatusInternalServerError, "file has no container info")
+		return
+	}
+
+	data, err := h.blob.Load(file.Container)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to load file")
+		return
+	}
+
+	format := r.URL.Query().Get("format")
+	mimetype := file.MIMEType
+	if format == "png" && isTiffMimeType(file.MIMEType) {
+		convertedData, convErr := convertTiffToPng(data)
+		if convErr != nil {
+			h.log.Warn("failed to convert tiff to png", "error", convErr, "filename", file.Name)
+		} else {
+			data = convertedData
+			mimetype = "image/png"
+		}
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"name":     file.Name,
+		"type":     file.Type,
+		"page":     file.Page,
+		"mimetype": mimetype,
+		"data":     base64.StdEncoding.EncodeToString(data),
+	})
+}
+
+func (h *Handler) resolveShare(ctx context.Context, link string) (*model.Share, int, error) {
+	if strings.TrimSpace(link) == "" {
+		return nil, http.StatusBadRequest, errors.New("share link is required")
+	}
+
+	share, err := h.shareSvc.GetShare(ctx, link)
+	if err != nil || share == nil {
+		return nil, http.StatusNotFound, errors.New("share not found")
+	}
+
+	if strings.TrimSpace(share.DocumentID) == "" {
+		return nil, http.StatusNotFound, errors.New("share not found")
+	}
+
+	if !share.ValidTo.IsZero() && share.ValidTo.Before(time.Now()) {
+		return nil, http.StatusGone, errors.New("share expired")
+	}
+
+	return share, http.StatusOK, nil
 }

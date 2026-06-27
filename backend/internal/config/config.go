@@ -27,6 +27,7 @@ type Config struct {
 	MongoDB     MongoDB        `yaml:"mongodb"`
 	Repository  Repository     `yaml:"repository"`
 	Measurement bool           `yaml:"measurement"`
+	Backup      bool           `yaml:"backup"`
 
 	JWTSecret string `yaml:"jwtsecret,omitempty"`
 	AdminUser string `yaml:"adminuser,omitempty"`

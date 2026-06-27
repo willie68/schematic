@@ -45,6 +45,7 @@ type service struct {
 	store       store
 	blob        blobStore
 	measurement measurementService
+	backup      bool
 	stopCh      chan struct{}
 	doneCh      chan struct{}
 }
@@ -73,6 +74,13 @@ func WithDuration(duration time.Duration) func(*service) {
 	return func(s *service) {
 		s.log.Info("set backup duration", "duration", duration)
 		s.duration = duration
+	}
+}
+
+func WithBackup(backup bool) func(*service) {
+	return func(s *service) {
+		s.log.Info("set backup", "backup", backup)
+		s.backup = backup
 	}
 }
 
@@ -121,6 +129,10 @@ func (s *service) Stop() error {
 }
 
 func (s *service) Backup() error {
+	if !s.backup {
+		s.log.Info("backup is disabled, skipping")
+		return nil
+	}
 	if s.path == "" {
 		return errors.New("backup path is empty")
 	}

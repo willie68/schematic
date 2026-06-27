@@ -7,6 +7,14 @@ type Tag struct {
 	Counter int64  `json:"counter"`
 }
 
+type Share struct {
+	ID         string    `json:"id"`
+	CreatedAt  time.Time `json:"createdAt"`
+	ValidTo    time.Time `json:"validTo"`
+	Link       string    `json:"link"`
+	Owner      string    `json:"owner"`
+	DocumentID string    `json:"documentId"`
+}
 
 type DocumentFile struct {
 	Name      string         `json:"name" bson:"name"`

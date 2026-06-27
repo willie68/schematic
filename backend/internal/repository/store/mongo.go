@@ -38,6 +38,7 @@ type MongoStore struct {
 	usersCol       *mongo.Collection
 	effectsCol     *mongo.Collection
 	effectTypesCol *mongo.Collection
+	sharesCol      *mongo.Collection
 	logger         *slog.Logger
 }
 
@@ -104,7 +105,7 @@ func (s *MongoStore) Prepare() error {
 	s.usersCol = s.db.Collection(usersCollection)
 	s.effectsCol = s.db.Collection(effectsCollection)
 	s.effectTypesCol = s.db.Collection(effectTypesCollection)
-
+	s.sharesCol = s.db.Collection(sharesCollection)
 	if err = s.ensureIndexes(); err != nil {
 		_ = client.Disconnect(context.Background())
 		return err
@@ -288,6 +289,18 @@ func (s *MongoStore) fetchDocumentTags(ctx context.Context, id string) ([]string
 	}
 
 	return normalizeTags(prev.Tags), nil
+}
+
+func (s *MongoStore) HasID(ctx context.Context, id string) bool {
+	if s.col == nil {
+		return false
+	}
+
+	count, err := s.col.CountDocuments(ctx, bson.D{{Key: "_id", Value: id}}, options.Count().SetLimit(1))
+	if err != nil {
+		return false
+	}
+	return count > 0
 }
 
 func (s *MongoStore) GetByID(ctx context.Context, id string) (model.Document, error) {
