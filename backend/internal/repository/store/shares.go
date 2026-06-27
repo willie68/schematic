@@ -14,10 +14,10 @@ const sharesCollection = "shares"
 
 type mongoShare struct {
 	ID         bson.ObjectID `bson:"_id"`
-	CreatedAt  time.Time `bson:"createdAt"`
-	ValidTo    time.Time `bson:"validTo"`
-	Owner      string    `bson:"owner"`
-	DocumentID string    `bson:"documentId"`
+	CreatedAt  time.Time     `bson:"createdAt"`
+	ValidTo    time.Time     `bson:"validTo"`
+	Owner      string        `bson:"owner"`
+	DocumentID string        `bson:"documentId"`
 }
 
 func (s *MongoStore) GetShare(ctx context.Context, link string) (*model.Share, error) {
