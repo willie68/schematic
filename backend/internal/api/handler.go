@@ -19,6 +19,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/samber/do/v2"
+	"github.com/willie68/gowillie68/pkg/measurement"
 	"github.com/willie68/schematics2/backend/internal/auth"
 	"github.com/willie68/schematics2/backend/internal/config"
 	"github.com/willie68/schematics2/backend/internal/domain/model"
@@ -86,6 +87,10 @@ type hasherService interface {
 	GetHashFromPayload(payload []byte) string
 }
 
+type measurementService interface {
+	Start(name string) measurement.Monitor
+}
+
 type Handler struct {
 	cfg             config.Config
 	log             *slog.Logger
@@ -98,6 +103,7 @@ type Handler struct {
 	userStore       userStore
 	shareSvc        shareService
 	hasher          hasherService
+	measurement     measurementService
 	adminPW         string
 }
 
@@ -138,6 +144,7 @@ func NewHandler(i do.Injector) *Handler {
 		userStore:       do.MustInvokeAs[userStore](i),
 		shareSvc:        do.MustInvokeAs[shareService](i),
 		hasher:          do.MustInvokeAs[hasherService](i),
+		measurement:     do.MustInvokeAs[measurementService](i),
 		adminPW:         hash,
 	}
 }
@@ -1030,6 +1037,11 @@ func (h *Handler) downloadFile(w http.ResponseWriter, r *http.Request) {
 	if file.Container == nil {
 		respondError(w, http.StatusInternalServerError, "file has no container info")
 		return
+	}
+	if h.measurement != nil {
+		if mon := h.measurement.Start("download-blob"); mon != nil {
+			defer mon.Stop()
+		}
 	}
 
 	data, err := h.blob.Load(file.Container)

@@ -190,7 +190,7 @@ func newBackup(inj do.Injector, cfg config.Config) error {
 		inj,
 		backup.WithBackupEnable(cfg.Backup.Enable),
 		backup.WithDuration(time.Duration(cfg.Backup.Duration)*time.Hour),
-		backup.WithPath(cfg.Repository.BackupPath),
+		backup.WithPath(cfg.Backup.BackupPath),
 	)
 	if err != nil {
 		return err

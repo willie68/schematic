@@ -1,5 +1,13 @@
 # History
 
+## 0.3.7 - 2026-06-29 (Backend & Frontend)
+
+- **Issue #1 - Deployment**:
+  - **Backend**: Backup-Pfad in `newBackup` auf `cfg.Backup.BackupPath` korrigiert
+  - **Backend**: Download-Blob-Ladevorgang mit `measurement` instrumentiert (`download-blob`)
+  - **Backend/Frontend**: Versionsstände auf `0.3.7` angehoben
+  - **Dokumentation**: README und HISTORY für das Deployment synchronisiert
+
 ## 0.3.4 - 2026-06-25 (Backend & Frontend)
 
 - **Mobile Suche und Detailansicht deutlich verbessert**:
