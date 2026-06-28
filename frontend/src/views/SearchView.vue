@@ -433,36 +433,27 @@ function getDocumentLink() {
 async function copyDocumentLink() {
   if (!selectedDocument.value) return
 
-  if (isLoggedIn.value) {
-    try {
-      const { data } = await api.post(`/api/v1/documents/${selectedDocument.value.id}/shares`)
-      if (data?.id) {
-        activeShareToken.value = data.id
-      }
-      const link = typeof data?.link === 'string' && data.link.trim() !== ''
-        ? data.link
-        : getDocumentLink()
-      if (!link) {
-        info('Share-Link konnte nicht erzeugt werden')
-        return
-      }
-      await navigator.clipboard.writeText(link)
-      info('Link kopiert')
-    } catch (err) {
-      console.error('Fehler beim Erzeugen des Share-Links:', err)
-      info('Fehler beim Erzeugen des Share-Links')
+  try {
+    const { data } = await api.post(`/api/v1/documents/${selectedDocument.value.id}/shares`)
+    if (data?.id) {
+      activeShareToken.value = data.id
     }
-    return
-  }
 
-  const link = getDocumentLink()
-  if (!link) return
+    const link = typeof data?.link === 'string' && data.link.trim() !== ''
+      ? data.link
+      : getDocumentLink()
 
-  navigator.clipboard.writeText(link).then(() => {
+    if (!link) {
+      info('Share-Link konnte nicht erzeugt werden')
+      return
+    }
+
+    await navigator.clipboard.writeText(link)
     info('Link kopiert')
-  }).catch(() => {
-    info('Fehler beim Kopieren')
-  })
+  } catch (err) {
+    console.error('Fehler beim Erzeugen des Share-Links:', err)
+    info('Fehler beim Erzeugen des Share-Links')
+  }
 }
 
 function getFileApiUrl(fileName) {

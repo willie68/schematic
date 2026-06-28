@@ -38,6 +38,7 @@ type documentStore interface {
 	GetByID(ctx context.Context, id string) (model.Document, error)
 	DeleteByID(ctx context.Context, id string) error
 	CountAll(ctx context.Context) (int64, error)
+	HasHash(ctx context.Context, hash string) bool
 }
 
 type effectStore interface {
@@ -81,6 +82,10 @@ type shareService interface {
 	GetShare(ctx context.Context, link string) (*model.Share, error)
 }
 
+type hasherService interface {
+	GetHashFromPayload(payload []byte) string
+}
+
 type Handler struct {
 	cfg             config.Config
 	log             *slog.Logger
@@ -92,6 +97,7 @@ type Handler struct {
 	userSvc         usersService
 	userStore       userStore
 	shareSvc        shareService
+	hasher          hasherService
 	adminPW         string
 }
 
@@ -131,6 +137,7 @@ func NewHandler(i do.Injector) *Handler {
 		userSvc:         do.MustInvokeAs[usersService](i),
 		userStore:       do.MustInvokeAs[userStore](i),
 		shareSvc:        do.MustInvokeAs[shareService](i),
+		hasher:          do.MustInvokeAs[hasherService](i),
 		adminPW:         hash,
 	}
 }
@@ -155,6 +162,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		api.Get("/documents/{id}/files/{filename}", h.downloadFile)
 		api.Get("/shares/{link}", h.getSharedDocument)
 		api.Get("/shares/{link}/files/{filename}", h.downloadSharedFile)
+		api.Post("/documents/{id}/shares", h.createShare)
 
 		api.Get("/effects/search", h.searchEffects)
 		api.Get("/effects/{id}/image", h.getEffectImage)
@@ -174,7 +182,8 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 			protected.Post("/documents", h.createDocument)
 			protected.Patch("/documents/{id}", h.updateDocument)
 			protected.Delete("/documents/{id}", h.deleteDocument)
-			protected.Post("/documents/{id}/shares", h.createShare)
+
+			protected.Post("/files/presence", h.checkFilePresence)
 
 			protected.Post("/effects", h.createEffect)
 			protected.Patch("/effects/{id}", h.updateEffect)
@@ -764,6 +773,43 @@ func (h *Handler) deleteDocument(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]any{"status": "deleted", "id": docID})
 }
 
+func (h *Handler) checkFilePresence(w http.ResponseWriter, r *http.Request) {
+	if h.hasher == nil {
+		respondError(w, http.StatusInternalServerError, "hasher not initialized")
+		return
+	}
+
+	var req struct {
+		Data    string `json:"data"`
+		Payload string `json:"payload"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid payload")
+		return
+	}
+
+	encoded := strings.TrimSpace(req.Data)
+	if encoded == "" {
+		encoded = strings.TrimSpace(req.Payload)
+	}
+	if encoded == "" {
+		respondError(w, http.StatusBadRequest, "file payload is required")
+		return
+	}
+
+	payload, err := decodeBase64File(encoded)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid payload")
+		return
+	}
+
+	hash := h.hasher.GetHashFromPayload(payload)
+	presence := h.docStore.HasHash(r.Context(), hash)
+
+	respondJSON(w, http.StatusOK, map[string]any{"presence": presence})
+}
+
 func (h *Handler) storeBlobFiles(doc *model.Document) error {
 	if doc == nil {
 		return errors.New("document is nil")
@@ -787,7 +833,7 @@ func (h *Handler) storeBlobFiles(doc *model.Document) error {
 		if err != nil {
 			return fmt.Errorf("store file %q: %w", doc.Files[i].Name, err)
 		}
-
+		doc.Files[i].Hash = h.hasher.GetHashFromPayload(data)
 		doc.Files[i].Container = info
 		doc.Files[i].Data = ""
 	}

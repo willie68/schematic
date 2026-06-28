@@ -16,6 +16,7 @@ import (
 	"github.com/willie68/schematics2/backend/internal/repository/blob"
 	"github.com/willie68/schematics2/backend/internal/repository/store"
 	"github.com/willie68/schematics2/backend/internal/services/backup"
+	"github.com/willie68/schematics2/backend/internal/services/hash"
 	"github.com/willie68/schematics2/backend/internal/services/health"
 	"github.com/willie68/schematics2/backend/internal/services/shttp"
 	"github.com/willie68/schematics2/backend/internal/services/users"
@@ -58,6 +59,12 @@ func InitServices(inj do.Injector, cfg config.Config) error {
 	if err = newBackup(inj, cfg); err != nil {
 		return err
 	}
+
+	if err = newHasher(inj, cfg); err != nil {
+		return err
+	}
+
+	migration(inj)
 
 	return InitRESTService(inj, cfg)
 }
@@ -185,5 +192,23 @@ func newBackup(inj do.Injector, cfg config.Config) error {
 	}
 	do.ProvideValue(inj, backupSvc)
 
+	return nil
+}
+
+func newHasher(inj do.Injector, cfg config.Config) error {
+	hasherSvc := hash.New(inj)
+	do.ProvideValue(inj, hasherSvc)
+
+	return nil
+}
+
+type hasher interface {
+	RebuildAllHashes() error
+}
+
+func migration(inj do.Injector) error {
+	logger.Debug("start migration")
+	srv := do.MustInvokeAs[hasher](inj)
+	srv.RebuildAllHashes()
 	return nil
 }

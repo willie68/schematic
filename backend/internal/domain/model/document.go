@@ -21,6 +21,7 @@ type DocumentFile struct {
 	Page      int            `json:"page" bson:"page"`
 	MIMEType  string         `json:"mimetype" bson:"mimetype"`
 	Type      string         `json:"type" bson:"type"`
+	Hash      string         `json:"hash" bson:"hash"`
 	Container *ContainerInfo `json:"container,omitempty" bson:"container,omitempty"`
 	Data      string         `json:"data,omitempty" bson:"-"`
 }

@@ -114,7 +114,20 @@
         <div style="display:grid; gap:0.8rem;">
           <div v-for="(file, index) in form.files" :key="index" style="display:grid; grid-template-columns: 1fr 200px auto; gap:0.5rem; align-items:center; padding:0.8rem; border:1px solid #e0e0e0; border-radius:4px;">
             <div style="display:flex; flex-direction:column; gap:0.2rem;">
-              <span style="font-weight:500; font-size:0.95rem;">{{ file.name }}</span>
+              <span style="display:flex; align-items:center; gap:0.45rem; font-weight:500; font-size:0.95rem;">
+                <span>{{ file.name }}</span>
+                <i
+                  v-if="file.presence"
+                  class="pi pi-exclamation-circle"
+                  v-tooltip.bottom="'Dokument bereits hochgeladen'"
+                  style="color:#f59e0b; font-size:1rem;"
+                />
+                <i
+                  v-else-if="file.presence === false"
+                  class="pi pi-check-circle"
+                  style="color:#16a34a; font-size:1rem;"
+                />
+              </span>
               <span style="font-size:0.85rem; color:#666;">{{ file.mimetype }}</span>
             </div>
             <Dropdown 
@@ -162,6 +175,7 @@ import Button from 'primevue/button'
 import Message from 'primevue/message'
 import api from '../services/api'
 import { DOC_TYPES } from '../constants/docTypes'
+import { checkFilePresence } from '../utils/filePresence'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -329,16 +343,7 @@ async function onFileSelect(event) {
   // Only add files that are not already in the list
   for (const file of newFiles) {
     if (!existingNames.has(file.name)) {
-      const data = await fileToBase64(file)
-      // Use file.type if available, otherwise determine from filename
-      const mimetype = file.type && file.type !== '' ? file.type : getMimeTypeFromFilename(file.name)
-      form.value.files.push({
-        name: file.name,
-        page: 1,
-        mimetype: mimetype,
-        type: '', // User must select
-        data,
-      })
+      form.value.files.push(await createUploadFileEntry(file))
       existingNames.add(file.name)
     }
   }
@@ -366,18 +371,28 @@ async function onFileDrop(event) {
     }
 
     if (!existingNames.has(file.name)) {
-      const data = await fileToBase64(file)
-      // Use file.type if available, otherwise determine from filename
-      const mimetype = file.type && file.type !== '' ? file.type : getMimeTypeFromFilename(file.name)
-      form.value.files.push({
-        name: file.name,
-        page: 1,
-        mimetype: mimetype,
-        type: '', // User must select
-        data,
-      })
+      form.value.files.push(await createUploadFileEntry(file))
       existingNames.add(file.name)
     }
+  }
+}
+
+async function createUploadFileEntry(file) {
+  const data = await fileToBase64(file)
+  const mimetype = file.type && file.type !== '' ? file.type : getMimeTypeFromFilename(file.name)
+  const presence = await checkFilePresence({
+    name: file.name,
+    mimetype,
+    data,
+  })
+
+  return {
+    name: file.name,
+    page: 1,
+    mimetype,
+    type: '',
+    data,
+    presence,
   }
 }
 

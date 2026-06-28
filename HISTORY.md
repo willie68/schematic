@@ -1,5 +1,21 @@
 # History
 
+## 0.3.5 - 2026-06-28 (Backend & Frontend)
+
+- **Hash-basierter Presence-Check für Datei-Uploads**:
+  - **Backend**: `checkFilePresence` implementiert (`POST /api/v1/files/presence`)
+  - **Backend**: Payload-Bytes werden per `GetHashFromPayload` gehasht und über `HasHash` gegen vorhandene Dateien geprüft
+  - **Backend**: API-Tests für Presence-Check ergänzt (Treffer, kein Treffer, invalid payload)
+- **Frontend Upload/Edit verbessert**:
+  - **Frontend**: Presence-Check beim direkten Hinzufügen jeder Datei in Upload- und Edit-Dialog
+  - **Frontend**: Visuelles Feedback je Datei:
+    - Orangefarbenes Ausrufezeichen (Tooltip: "Dokument bereits hochgeladen") bei `presence=true`
+    - Grüner Haken bei `presence=false`
+- **Share-Link UX angepasst**:
+  - **Frontend**: Share-Link-Erzeugung im Such-View nicht mehr an Login-Status gekoppelt
+- **Hash-Service Testabdeckung erweitert**:
+  - **Backend**: Umfangreiche Unit-Tests für Hash-Service und Rebuild-Logik ergänzt
+
 ## 0.3.4 - 2026-06-27 (Backend & Frontend)
 
 - **Feature: Share Document (Issue #4) vollständig umgesetzt**:

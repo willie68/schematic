@@ -155,6 +155,7 @@ func (s *MongoStore) ensureIndexes() error {
 		{Keys: bson.D{{Key: "subtitle", Value: 1}}},
 		{Keys: bson.D{{Key: "description", Value: 1}}},
 		{Keys: bson.D{{Key: "tags", Value: 1}}},
+		{Keys: bson.D{{Key: "files.hash", Value: 1}}},
 
 		// Access control fields
 		{Keys: bson.D{{Key: "privateFile", Value: 1}}},
@@ -297,6 +298,18 @@ func (s *MongoStore) HasID(ctx context.Context, id string) bool {
 	}
 
 	count, err := s.col.CountDocuments(ctx, bson.D{{Key: "_id", Value: id}}, options.Count().SetLimit(1))
+	if err != nil {
+		return false
+	}
+	return count > 0
+}
+
+func (s *MongoStore) HasHash(ctx context.Context, hash string) bool {
+	if s.col == nil {
+		return false
+	}
+
+	count, err := s.col.CountDocuments(ctx, bson.D{{Key: "files.hash", Value: hash}}, options.Count().SetLimit(1))
 	if err != nil {
 		return false
 	}
@@ -569,6 +582,46 @@ func (s *MongoStore) List() []model.Document {
 	}
 
 	return out
+}
+
+func (s *MongoStore) All(f func(m model.Document) bool) error {
+	if s.col == nil {
+		return errors.New("mongodb not initialised")
+	}
+
+	ctx := context.Background()
+
+	cur, err := s.col.Find(ctx, bson.D{}, options.Find().SetSort(bson.D{{Key: "_id", Value: 1}}))
+	if err != nil {
+		return fmt.Errorf("list documents failed: %w", err)
+	}
+	defer cur.Close(ctx)
+
+	for cur.Next(ctx) {
+		var doc mongoDocument
+		if err = cur.Decode(&doc); err != nil {
+			return fmt.Errorf("decode document: %w", err)
+		}
+
+		out := model.Document{
+			ID:             doc.ID,
+			CreatedAt:      doc.CreatedAt,
+			LastModifiedAt: doc.LastModifiedAt,
+			Manufacturer:   doc.Manufacturer,
+			Model:          doc.Model,
+			Subtitle:       doc.Subtitle,
+			Tags:           doc.Tags,
+			Description:    doc.Description,
+			PrivateFile:    doc.PrivateFile,
+			Owner:          doc.Owner,
+			Files:          doc.Files,
+		}
+		if !f(out) {
+			break
+		}
+	}
+
+	return nil
 }
 
 func (s *MongoStore) ExportBackup(ctx context.Context, dir string) error {
