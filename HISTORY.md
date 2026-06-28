@@ -20,6 +20,37 @@
   - Scroll- und Höhenlogik in der Detailansicht überarbeitet, damit der Dateibereich wieder erreichbar ist
   - Mobile Toasts kompakter und minimalistischer gestaltet, mit robuster Darstellung ohne Abschneiden
 
+## 0.3.5 - 2026-06-28 (Backend & Frontend)
+
+- **Hash-basierter Presence-Check für Datei-Uploads**:
+  - **Backend**: `checkFilePresence` implementiert (`POST /api/v1/files/presence`)
+  - **Backend**: Payload-Bytes werden per `GetHashFromPayload` gehasht und über `HasHash` gegen vorhandene Dateien geprüft
+  - **Backend**: API-Tests für Presence-Check ergänzt (Treffer, kein Treffer, invalid payload)
+- **Frontend Upload/Edit verbessert**:
+  - **Frontend**: Presence-Check beim direkten Hinzufügen jeder Datei in Upload- und Edit-Dialog
+  - **Frontend**: Visuelles Feedback je Datei:
+    - Orangefarbenes Ausrufezeichen (Tooltip: "Dokument bereits hochgeladen") bei `presence=true`
+    - Grüner Haken bei `presence=false`
+- **Share-Link UX angepasst**:
+  - **Frontend**: Share-Link-Erzeugung im Such-View nicht mehr an Login-Status gekoppelt
+- **Hash-Service Testabdeckung erweitert**:
+  - **Backend**: Umfangreiche Unit-Tests für Hash-Service und Rebuild-Logik ergänzt
+
+## 0.3.4 - 2026-06-27 (Backend & Frontend)
+
+- **Feature: Share Document (Issue #4) vollständig umgesetzt**:
+  - **Backend**: Share-Erzeugung abgesichert (nur Owner/Admin, JWT erforderlich)
+  - **Backend**: Neue öffentliche Share-Endpunkte:
+    - `GET /api/v1/shares/{link}` für Dokumentzugriff über Share-Link
+    - `GET /api/v1/shares/{link}/files/{filename}` für Dateidownload über Share-Link
+  - **Backend**: Ablaufprüfung für Shares (`410 Gone` bei abgelaufenem Share)
+  - **Backend**: Share-Persistenz in MongoDB robust gemacht (Mongo `_id` als ObjectID, Ausgabe als Hex-Share-ID)
+  - **Frontend**: Dokumentansicht unterstützt `share`-Query-Parameter
+  - **Frontend**: Dateiabrufe verwenden bei aktivem Share die neuen Share-Endpunkte
+  - **Frontend**: "Link kopieren" erzeugt jetzt einen echten Share-Link über die API
+  - **Frontend**: Generierte Share-Links zeigen auf `/client/search?share=...` statt auf Dokument-IDs
+  - **Frontend**: Ein-Datei-Shared-Dokumente bleiben beim Klick auf die Dateizeile stabil geöffnet
+
 ## 0.3.3 - 2026-06-21 (Backend)
 
 - **Backup-Workflow erweitert und robuster gemacht**:

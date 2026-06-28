@@ -153,7 +153,8 @@
               size="small"
               selectionMode="single"
               v-model:selection="selectedFile"
-              @rowClick="onFileSelect">
+              @rowSelect="onFileSelect"
+              @rowUnselect="onFileUnselect">
               <Column field="type" header="Type" style="width:5rem;">
                 <template #body="{ data }">
                   <span v-if="isMobileView" class="doc-type-icon" :title="getDocTypeLabel(data.type) || data.type">
@@ -258,7 +259,8 @@
                 size="small"
                 selectionMode="single"
                 v-model:selection="selectedFile"
-                @rowClick="onFileSelect">
+                @rowSelect="onFileSelect"
+                @rowUnselect="onFileUnselect">
                 <Column field="type" header="Type" style="width:5rem;">
                     <template #body="{ data }">
                       <span v-if="isMobileView" class="doc-type-icon" :title="getDocTypeLabel(data.type) || data.type">
@@ -432,6 +434,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import { ref, onMounted, watch } from 'vue'
 import InputText from 'primevue/inputtext'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
@@ -460,6 +463,7 @@ const showUploadDialog = ref(false)
 const showEditDialog = ref(false)
 const selectedDocument = ref(null)
 const selectedFile = ref(null)
+const activeShareToken = ref('')
 const showMobileFileViewer = ref(false)
 const showDetailPanel = ref(false)
 const expandDetailPanel = ref(false)
@@ -506,20 +510,46 @@ async function loadAppInfo() {
 }
 
 function getDocumentLink() {
-  if (!selectedDocument.value) return null
+  if (!activeShareToken.value) return null
   const baseUrl = window.location.origin + window.location.pathname
-  return `${baseUrl}?id=${encodeURIComponent(selectedDocument.value.id)}`
+  const params = new URLSearchParams()
+  params.set('share', activeShareToken.value)
+  return `${baseUrl}?${params.toString()}`
 }
 
-function copyDocumentLink() {
-  const link = getDocumentLink()
-  if (link) {
-    navigator.clipboard.writeText(link).then(() => {
-      info('Link kopiert')
-    }).catch(() => {
-      info('Fehler beim Kopieren')
-    })
+async function copyDocumentLink() {
+  if (!selectedDocument.value) return
+
+  try {
+    const { data } = await api.post(`/api/v1/documents/${selectedDocument.value.id}/shares`)
+    if (data?.id) {
+      activeShareToken.value = data.id
+    }
+
+    const link = typeof data?.link === 'string' && data.link.trim() !== ''
+      ? data.link
+      : getDocumentLink()
+
+    if (!link) {
+      info('Share-Link konnte nicht erzeugt werden')
+      return
+    }
+
+    await navigator.clipboard.writeText(link)
+    info('Link kopiert')
+  } catch (err) {
+    console.error('Fehler beim Erzeugen des Share-Links:', err)
+    info('Fehler beim Erzeugen des Share-Links')
   }
+}
+
+function getFileApiUrl(fileName) {
+  if (!selectedDocument.value) return null
+  const encodedFileName = encodeURIComponent(fileName)
+  if (activeShareToken.value) {
+    return `/api/v1/shares/${encodeURIComponent(activeShareToken.value)}/files/${encodedFileName}`
+  }
+  return `/api/v1/documents/${selectedDocument.value.id}/files/${encodedFileName}`
 }
 
 onMounted(async () => {
@@ -530,10 +560,29 @@ onMounted(async () => {
   // Check if document ID is in URL parameters
   const params = new URLSearchParams(window.location.search)
   const docId = params.get('id')
+  const share = params.get('share')
   
-  if (docId) {
+  if (share) {
     try {
-      // Fetch the document directly by ID
+      activeShareToken.value = share
+      const { data } = await api.get(`/api/v1/shares/${encodeURIComponent(share)}`)
+      if (data) {
+        selectedDocument.value = data
+        selectedFile.value = null
+        if (data.files && data.files.length > 0) {
+          selectedFile.value = data.files[0]
+          await loadFileData(selectedFile.value)
+        }
+        expandDetailPanel.value = true
+        hideSearchResults.value = true
+        showDetailPanel.value = false
+      }
+    } catch (err) {
+      console.error('Geteiltes Dokument nicht gefunden:', err)
+      info('Geteiltes Dokument nicht gefunden')
+    }
+  } else if (docId) {
+    try {
       const { data } = await api.get(`/api/v1/documents/${docId}`)
       if (data) {
         selectedDocument.value = data
@@ -606,6 +655,7 @@ function togglePrivateAndSearch() {
 async function search(resetPage = true) {
   try {
     isSearching.value = true
+    activeShareToken.value = ''
     
     // Reset pagination when starting a new search
     if (resetPage) {
@@ -661,15 +711,17 @@ function selectDocument(event) {
   // Erste Datei automatisch selektieren, falls vorhanden
   if (!isMobileView.value && selectedDocument.value.files && selectedDocument.value.files.length > 0) {
     selectedFile.value = selectedDocument.value.files[0]
-    // Lade die Datei automatisch
-    if (!selectedFile.value.data) {
-      loadFileData(selectedFile.value)
-    }
   }
 }
 
 async function onFileSelect(event) {
   selectedFile.value = event.data
+}
+
+function onFileUnselect(event) {
+  if (!selectedDocument.value?.files?.length) {
+    selectedFile.value = null
+    return
 
   if (isMobileView.value) {
     if (!selectedFile.value.data) {
@@ -683,7 +735,15 @@ async function onFileSelect(event) {
   if (!isMobileView.value && !selectedFile.value.data) {
     loadFileData(selectedFile.value)
   }
+  selectedFile.value = event.data
 }
+
+watch(selectedFile, (file) => {
+  if (!file || file.data) {
+    return
+  }
+  loadFileData(file)
+})
 
 function isPdfFile(file) {
   if (!file) return false
@@ -703,7 +763,8 @@ function isImageFile(file) {
 
 async function loadFileData(file) {
   try {
-    let url = `/api/v1/documents/${selectedDocument.value.id}/files/${encodeURIComponent(file.name)}`
+    let url = getFileApiUrl(file.name)
+    if (!url) return
     
     // Request PNG conversion for TIFF files (viewer only)
     if (isTiffFile(file)) {
@@ -755,7 +816,8 @@ function downloadImage() {
   // For TIFF files, load the original file without conversion
   const downloadData = async () => {
     try {
-      let url = `/api/v1/documents/${selectedDocument.value.id}/files/${encodeURIComponent(selectedFile.value.name)}`
+      let url = getFileApiUrl(selectedFile.value.name)
+      if (!url) return
       // Don't use format=png for downloads - get original file
       const { data } = await api.get(url)
       

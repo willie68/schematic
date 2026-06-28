@@ -4,7 +4,7 @@ Schematics2 ist der Nachfolger von WilliesSchematicsWorld als Monorepo.
 
 Das Repository ist mit GitHub unter https://github.com/willie68/schematics2 verknüpft.
 
-**Version: Backend 0.3.4, Frontend 0.3.4**
+**Version: Backend 0.3.5, Frontend 0.3.5**
 
 ## Features
 
@@ -22,6 +22,8 @@ Das Repository ist mit GitHub unter https://github.com/willie68/schematics2 verk
   - Mobile Vollbildansicht für Bilder ohne überlagerte Preview-Hinweise
 - **Authentifizierung**: Eigener Authentifizierungs- und Autorisierungsdienst mit User Registration
 - **Private Documents**: Unterstützung für private und öffentliche Dokumente
+- **Share-Links**: Zeitlich begrenzte Freigaben für Dokumente und Dateien über öffentliche Share-URLs
+- **Upload-Duplikatprüfung**: Beim Hinzufügen von Dateien wird per Presence-Check geprüft, ob dieselbe Datei bereits vorhanden ist (Hash-basiert)
 - **Datenschutz & Rechtliches**: Cookie-Hinweis, Datenschutz, Impressum und Haftungsausschluss im Frontend
 - **Effektdatenbank**: Verwaltung und Suche von Effekten mit Sortierung
   - i18n German Übersetzungen für Effekt-Typen
@@ -144,6 +146,10 @@ go run cmd/import-all/main.go -base-dir ./testdata -schematics=false -effecttype
 - `GET /api/v1/documents/search?q=<query>&tag=<t1>&tag=<t2>` - Suche mit Volltext und Tags (optional mit JWT für private Treffer)
 - `GET /api/v1/documents/<id>` - Einzelnes Dokument laden (privat nur für Owner)
 - `GET /api/v1/documents/<id>/files/<filename>` - Datei aus Dokument laden (privat nur für Owner)
+- `POST /api/v1/documents/<id>/shares` (auth required) - Erstellt einen Share-Link für ein Dokument (Owner/Admin)
+- `POST /api/v1/files/presence` (auth required) - Prüft hash-basiert, ob eine hochzuladende Datei bereits vorhanden ist
+- `GET /api/v1/shares/<link>` - Lädt ein Dokument über Share-Link (inkl. privater Dokumente)
+- `GET /api/v1/shares/<link>/files/<filename>` - Lädt eine Datei über Share-Link
 
 ### Effects API
 
