@@ -80,5 +80,5 @@ repository:
   # Options: "none" (default), "gzip", "zstd" (recommended for already-compressed formats like PDF, JPEG, TIF)
   compressionType: "zstd"
 
-meaasurement: true
+measurement: true
 backup: false
