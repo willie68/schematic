@@ -26,12 +26,22 @@ type Config struct {
 	Profiling   Profiling      `yaml:"profiling"`
 	MongoDB     MongoDB        `yaml:"mongodb"`
 	Repository  Repository     `yaml:"repository"`
-	Measurement bool           `yaml:"measurement"`
-	Backup      bool           `yaml:"backup"`
+	Measurement Measurement    `yaml:"measurement"`
+	Backup      Backup         `yaml:"backup"`
 
 	JWTSecret string `yaml:"jwtsecret,omitempty"`
 	AdminUser string `yaml:"adminuser,omitempty"`
 	AdminPass string `yaml:"adminpass,omitempty"`
+}
+
+type Measurement struct {
+	Enable bool `yaml:"enable"`
+}
+
+type Backup struct {
+	Enable     bool   `yaml:"enable"`
+	BackupPath string `yaml:"backupPath"`
+	Duration   int    `yaml:"duration"`
 }
 
 type Metrics struct {
@@ -49,7 +59,6 @@ type Profiling struct {
 
 type Repository struct {
 	RepositoryPath     string `yaml:"repositoryPath"`
-	BackupPath         string `yaml:"backupPath"`
 	ContainerMaxSizeMB int64  `yaml:"containerMaxSizeMB"`
 	CompressionType    string `yaml:"compressionType"` // "none", "gzip", "zstd"
 }

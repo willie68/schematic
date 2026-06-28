@@ -186,7 +186,12 @@ func newUserService(inj do.Injector) error {
 }
 
 func newBackup(inj do.Injector, cfg config.Config) error {
-	backupSvc, err := backup.New(inj, backup.WithBackup(cfg.Backup), backup.WithDuration(8*time.Hour), backup.WithPath(cfg.Repository.BackupPath))
+	backupSvc, err := backup.New(
+		inj,
+		backup.WithBackupEnable(cfg.Backup.Enable),
+		backup.WithDuration(time.Duration(cfg.Backup.Duration)*time.Hour),
+		backup.WithPath(cfg.Repository.BackupPath),
+	)
 	if err != nil {
 		return err
 	}

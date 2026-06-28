@@ -80,5 +80,10 @@ repository:
   # Options: "none" (default), "gzip", "zstd" (recommended for already-compressed formats like PDF, JPEG, TIF)
   compressionType: "zstd"
 
-measurement: true
-backup: false
+measurement: 
+  enable: true
+
+backup: 
+  enable: false
+  backupPath: ./../dev_data/backup 
+  duration: 8

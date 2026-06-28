@@ -77,7 +77,7 @@ func WithDuration(duration time.Duration) func(*service) {
 	}
 }
 
-func WithBackup(backup bool) func(*service) {
+func WithBackupEnable(backup bool) func(*service) {
 	return func(s *service) {
 		s.log.Info("set backup", "backup", backup)
 		s.backup = backup
