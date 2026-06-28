@@ -432,9 +432,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { ref, onMounted, watch } from 'vue'
 import InputText from 'primevue/inputtext'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
@@ -715,27 +714,25 @@ function selectDocument(event) {
 }
 
 async function onFileSelect(event) {
-  selectedFile.value = event.data
-}
+  const file = event.data
+  selectedFile.value = file
 
-function onFileUnselect(event) {
-  if (!selectedDocument.value?.files?.length) {
-    selectedFile.value = null
+  if (!file) {
     return
+  }
+
+  if (!file.data) {
+    await loadFileData(file)
+  }
 
   if (isMobileView.value) {
-    if (!selectedFile.value.data) {
-      await loadFileData(selectedFile.value)
-    }
     showMobileFileViewer.value = true
-    return
   }
-  
-  // Lade die Datei, falls nicht bereits vorhanden
-  if (!isMobileView.value && !selectedFile.value.data) {
-    loadFileData(selectedFile.value)
-  }
-  selectedFile.value = event.data
+}
+
+function onFileUnselect() {
+  selectedFile.value = null
+  showMobileFileViewer.value = false
 }
 
 watch(selectedFile, (file) => {
