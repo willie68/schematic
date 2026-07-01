@@ -38,3 +38,5 @@ backend/configs/cert/
 schematics2.code-workspace
 
 backend/scripts/
+
+backend/configs/mongo-init.js

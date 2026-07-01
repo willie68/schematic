@@ -9,6 +9,8 @@ export const DOC_TYPES = [
   { label: 'Bild', value: 'image' },
   { label: 'Service-Dokumentation', value: 'service' },
   { label: 'Zertifikat', value: 'certificate' },
+  { label: 'Dokumentation', value: 'documentation' },
+  { label: 'sonstiges', value: 'other' },
 ]
 
 /**
@@ -48,6 +50,8 @@ export function getDocTypeIcon(value) {
       return 'pi pi-cog'
     case 'certificate':
       return 'pi pi-shield'
+    case 'documentation':
+      return 'pi pi-book'
     default:
       return 'pi pi-file'
   }
