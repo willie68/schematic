@@ -69,12 +69,13 @@ func (s *SHttp) startHTTPSServer(handler http.Handler) {
 	}
 
 	s.sslsrv = &http.Server{
-		Addr:         "0.0.0.0:" + strconv.Itoa(s.cfg.SSLPort),
-		WriteTimeout: 300 * time.Second, // 5 minutes for large file uploads
-		ReadTimeout:  300 * time.Second, // 5 minutes for large file uploads
-		IdleTimeout:  60 * time.Second,
-		Handler:      handler,
-		TLSConfig:    tlsConfig,
+		Addr:           "0.0.0.0:" + strconv.Itoa(s.cfg.SSLPort),
+		WriteTimeout:   300 * time.Second, // 5 minutes for large file uploads
+		ReadTimeout:    300 * time.Second, // 5 minutes for large file uploads
+		IdleTimeout:    60 * time.Second,
+		MaxHeaderBytes: 50 * 1024 * 1024, // 50MB for large JSON payloads
+		Handler:        handler,
+		TLSConfig:      tlsConfig,
 	}
 
 	go func() {
@@ -115,11 +116,12 @@ func (s *SHttp) resolveTLSConfig() (*tls.Config, error) {
 
 func (s *SHttp) startHTTPServer(handler http.Handler) {
 	s.srv = &http.Server{
-		Addr:         "0.0.0.0:" + strconv.Itoa(s.cfg.Port),
-		WriteTimeout: 300 * time.Second, // 5 minutes for large file uploads
-		ReadTimeout:  300 * time.Second, // 5 minutes for large file uploads
-		IdleTimeout:  60 * time.Second,
-		Handler:      handler,
+		Addr:           "0.0.0.0:" + strconv.Itoa(s.cfg.Port),
+		WriteTimeout:   300 * time.Second, // 5 minutes for large file uploads
+		ReadTimeout:    300 * time.Second, // 5 minutes for large file uploads
+		IdleTimeout:    60 * time.Second,
+		MaxHeaderBytes: 50 * 1024 * 1024, // 50MB for large JSON payloads
+		Handler:        handler,
 	}
 
 	go func() {

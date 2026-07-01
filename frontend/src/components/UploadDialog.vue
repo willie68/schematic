@@ -460,11 +460,24 @@ async function submit() {
       files: form.value.files,
     }
 
-    await api.post('/api/v1/documents', doc)
+    await api.post('/api/v1/documents', doc, {
+      timeout: 300000, // 5 min timeout für großen Upload
+    })
     close()
     emit('uploaded')
   } catch (err) {
-    errorMessage.value = err?.response?.data?.error || 'Upload fehlgeschlagen'
+    // Better error handling for network errors
+    if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
+      errorMessage.value = 'Upload-Timeout: Die Verbindung wurde unterbrochen. Bitte versuchen Sie es später erneut.'
+    } else if (err?.code === 'ERR_NETWORK' || err?.response === undefined) {
+      errorMessage.value = 'Netzwerkfehler: Überprüfen Sie die Verbindung und versuchen Sie es erneut.'
+    } else if (err?.response?.status === 413) {
+      errorMessage.value = 'Datei zu groß: Die maximale Größe für einen Upload überschritten.'
+    } else if (err?.response?.status === 500) {
+      errorMessage.value = 'Serverfehler: Bitte kontaktieren Sie den Administrator.'
+    } else {
+      errorMessage.value = err?.response?.data?.error || 'Upload fehlgeschlagen'
+    }
   } finally {
     isSubmitting.value = false
   }

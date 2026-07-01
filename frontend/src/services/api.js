@@ -4,6 +4,14 @@ import axios from 'axios'
 // e.g. '/schematics2/' for reverse-proxy or '/' for direct access
 const api = axios.create({
   baseURL: typeof __API_BASE__ !== 'undefined' ? __API_BASE__ : '/',
+  timeout: 60000, // 60s timeout für normale Requests
+  maxRedirects: 5,
+  httpAgent: {
+    keepAlive: true,
+  },
+  httpsAgent: {
+    keepAlive: true,
+  },
 })
 
 // Store for router and auth callbacks (set by main.js or App.vue)

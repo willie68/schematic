@@ -1,11 +1,11 @@
 import api from '../services/api'
+import { getHash } from './fileHash'
 
 export async function checkFilePresence(file) {
   try {
+    const hash = await getHash(file.data)
     const { data } = await api.post('/api/v1/files/presence', {
-      name: file.name,
-      mimetype: file.mimetype,
-      data: file.data,
+      hash,
     })
     return Boolean(data?.presence)
   } catch (_err) {

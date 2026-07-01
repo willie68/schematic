@@ -1,5 +1,19 @@
 # History
 
+## 0.3.8 - 2026-07-01 (Backend & Frontend)
+
+- **NS_ERROR_NET_RESET Fehler bei Upload/Presence/PATCH behoben**:
+  - **Backend**: Hash-basierter Presence Check implementiert (nur Hash statt komplette Base64-Datei)
+  - **Backend**: HTTP Server `MaxHeaderBytes` auf 50MB erhöht für große JSON-Payloads
+  - **Backend**: Body Size Limit Middleware (200MB) nur auf `/documents` Endpoints angewendet
+  - **Backend**: JSON Decoder optimiert (direktes Dekodieren statt Umweg über `map[string]any`)
+  - **Backend**: Content-Length Header in Response gesetzt für korrekte Verbindung
+  - **Frontend**: Axios mit `keepAlive: true` konfiguriert
+  - **Frontend**: Presence Check mit SHA-256 Hash statt ganzer Datei
+  - **Frontend**: PATCH Payload optimiert (nur Type-Updates für bestehende Files, keine Base64-Daten)
+  - **Frontend**: Upload- und Edit-Dialog Timeouts erhöht (300s)
+  - **Frontend**: Besseres Error-Handling für Netzwerkfehler (Timeout, Netzwerk, 413, 500)
+
 ## 0.3.7 - 2026-06-29 (Backend & Frontend)
 
 - **Issue #1 - Deployment**:

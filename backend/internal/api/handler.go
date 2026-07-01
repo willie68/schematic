@@ -179,6 +179,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 
 		api.Group(func(protected chi.Router) {
 			protected.Use(h.authMiddleware)
+
 			protected.Get("/users/me", h.me)
 			protected.Post("/users/change-password", h.changePassword)
 			protected.Get("/users", h.listUsers)
@@ -186,9 +187,13 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 
 			protected.Post("/auth/register", h.register)
 
-			protected.Post("/documents", h.createDocument)
-			protected.Patch("/documents/{id}", h.updateDocument)
-			protected.Delete("/documents/{id}", h.deleteDocument)
+			// Document uploads with large body size limit
+			protected.Route("/documents", func(docs chi.Router) {
+				docs.Use(limitBodySize(200 * 1024 * 1024)) // 200MB for uploads
+				docs.Post("/", h.createDocument)
+				docs.Patch("/{id}", h.updateDocument)
+				docs.Delete("/{id}", h.deleteDocument)
+			})
 
 			protected.Post("/files/presence", h.checkFilePresence)
 
@@ -478,25 +483,21 @@ func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) createDocument(w http.ResponseWriter, r *http.Request) {
-	var payload map[string]any
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		respondError(w, http.StatusBadRequest, "invalid payload")
-		return
-	}
-
-	raw, err := json.Marshal(payload)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid payload")
-		return
-	}
-
 	var doc model.Document
-	if err := json.Unmarshal(raw, &doc); err != nil {
+
+	// Decode directly to model to avoid extra Marshal/Unmarshal cycle
+	decoder := json.NewDecoder(r.Body)
+	decoder.UseNumber() // Preserve numeric precision
+
+	if err := decoder.Decode(&doc); err != nil {
 		respondError(w, http.StatusBadRequest, "invalid payload")
 		return
 	}
 
-	doc.Tags = parseTags(payload["tags"])
+	// Tags are already decoded, ensure they're properly formatted
+	if len(doc.Tags) == 0 {
+		doc.Tags = []string{}
+	}
 
 	if err := h.storeBlobFiles(&doc); err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
@@ -789,6 +790,7 @@ func (h *Handler) checkFilePresence(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Data    string `json:"data"`
 		Payload string `json:"payload"`
+		Hash    string `json:"hash"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -796,12 +798,21 @@ func (h *Handler) checkFilePresence(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Support new hash-based check (efficient)
+	hash := strings.TrimSpace(req.Hash)
+	if hash != "" {
+		presence := h.docStore.HasHash(r.Context(), hash)
+		respondJSON(w, http.StatusOK, map[string]any{"presence": presence})
+		return
+	}
+
+	// Legacy: Support old payload-based check for backward compatibility
 	encoded := strings.TrimSpace(req.Data)
 	if encoded == "" {
 		encoded = strings.TrimSpace(req.Payload)
 	}
 	if encoded == "" {
-		respondError(w, http.StatusBadRequest, "file payload is required")
+		respondError(w, http.StatusBadRequest, "file payload or hash is required")
 		return
 	}
 
@@ -811,7 +822,7 @@ func (h *Handler) checkFilePresence(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash := h.hasher.GetHashFromPayload(payload)
+	hash = h.hasher.GetHashFromPayload(payload)
 	presence := h.docStore.HasHash(r.Context(), hash)
 
 	respondJSON(w, http.StatusOK, map[string]any{"presence": presence})
