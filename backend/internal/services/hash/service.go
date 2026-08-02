@@ -69,6 +69,10 @@ func (s *service) RebuildAllHashes() error {
 func (s *service) GetHash(file model.DocumentFile) (string, error) {
 	payload, err := s.blob.Load(file.Container)
 	if err != nil {
+		if file.Container == nil {
+			s.log.Error("skip document file: no container info", "file:", file.Name)
+			return "", err
+		}
 		s.log.Error("skip document file: load failed", "container", file.Container.ContainerNumber, "index", file.Container.Offset, "error", err)
 		return "", err
 	}
