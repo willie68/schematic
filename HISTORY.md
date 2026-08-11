@@ -1,5 +1,11 @@
 # History
 
+## 0.3.9 - 2026-08-11 (Backend)
+
+- **GELF via TCP**: `logging.go` unterstützt jetzt GELF-Versand via TCP (zusätzlich zu UDP).
+  - Neue Config-Option `logging.gelf-protocol: tcp` (Standard: `udp`).
+  - Nutzt Bibliothek `github.com/slukits/graylog`.
+
 ## 0.3.8 - 2026-07-01 (Backend & Frontend)
 
 - **NS_ERROR_NET_RESET Fehler bei Upload/Presence/PATCH behoben**:
