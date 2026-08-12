@@ -104,7 +104,7 @@ func main() {
 	flag.Parse()
 
 	cfg := config.LoadFromEnv()
-	logging.Init(cfg.Logging)
+	logging.Init(cfg.Logging, "import-all")
 	logger := logging.New("import-all")
 
 	logger.Info("starting unified import",

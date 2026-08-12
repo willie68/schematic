@@ -73,9 +73,6 @@ func InitServices(inj do.Injector, cfg config.Config) error {
 func InitHelperServices(inj do.Injector, cfg config.Config) error {
 	logger.Debug("initialise helper services")
 
-	// Initialize logging first
-	logging.Init(cfg.Logging)
-
 	do.ProvideValue(inj, cfg)
 
 	measurement := measurement.New(true)

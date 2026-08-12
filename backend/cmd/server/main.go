@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,7 +18,7 @@ import (
 
 var (
 	inj    = do.New()
-	logger = logging.New("main")
+	logger *slog.Logger
 )
 
 type shttpsrv interface {
@@ -31,6 +32,10 @@ type backupService interface {
 
 func main() {
 	cfg := config.LoadFromEnv()
+
+	// Initialize logging first
+	logging.Init(cfg.Logging, cfg.HTTP.Servicename)
+	logger = logging.New("main")
 
 	// Log version and build information
 	startupLog(cfg)
