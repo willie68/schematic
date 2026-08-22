@@ -34,9 +34,9 @@ data/
 dev_data/
 
 backend/configs/cert/
+backend/configs/mongo-init.js
+backend/scripts/
+extracted/
 
 schematics2.code-workspace
 
-backend/scripts/
-
-backend/configs/mongo-init.js
